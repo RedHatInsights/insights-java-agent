@@ -338,11 +338,23 @@
 
   <profiles>
     <profile>
-      <id>default</id>
+      <id>mac</id>
       <activation>
         <activeByDefault>false</activeByDefault>
         <os>
           <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
+      </properties>
+    </profile>
+    <profile>
+      <id>linux</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+        <os>
+          <family>linux</family>
         </os>
       </activation>
       <properties>
