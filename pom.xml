@@ -21,7 +21,7 @@
 
     <!-- Test libraries versions -->
     <junit.version>5.9.2</junit.version>
-    <mockito.version>5.2.0</mockito.version>
+    <mockito.version>4.11.0</mockito.version>
     <byte-buddy.version>1.14.0</byte-buddy.version>
     <awaitility.version>4.2.0</awaitility.version>
 
@@ -66,13 +66,13 @@
       </dependency>
 
 <!--      Tools jar -->
-      <dependency>
-        <groupId>com.sun</groupId>
-        <artifactId>tools</artifactId>
-        <scope>system</scope>
-        <systemPath>${java.home}/../lib/tools.jar</systemPath>
-        <version>8.0.0</version>
-      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>com.sun</groupId>-->
+<!--        <artifactId>tools</artifactId>-->
+<!--        <scope>system</scope>-->
+<!--        <systemPath>${toolsjar}</systemPath>-->
+<!--        <version>1.8.0</version>-->
+<!--      </dependency>-->
 
       <!-- Test dependencies -->
       <dependency>
@@ -119,42 +119,6 @@
       <scope>test</scope>
     </dependency>
 
-      <!-- <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>${servlet-api.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>javax.servlet.jsp</groupId>
-        <artifactId>javax.servlet.jsp-api</artifactId>
-        <version>${servlet-jsp-api.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>uk.org.webcompere</groupId>
-        <artifactId>system-stubs-jupiter</artifactId>
-        <version>${system-stubs-jupiter.version}</version>
-        <scope>test</scope>
-      </dependency> -->
-
-      <!-- Vert.x for testing -->
-      <!-- <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-stack-depchain</artifactId>
-        <version>${vertx.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.smallrye.reactive</groupId>
-        <artifactId>smallrye-mutiny-vertx-web</artifactId>
-        <version>${smallrye-mutiny-vertx-bindings.version}</version>
-        <scope>test</scope>
-      </dependency> -->
-
     </dependencies>
   </dependencyManagement>
 
@@ -178,8 +142,47 @@
     </dependency>
 
     <dependency>
-      <groupId>com.sun</groupId>
-      <artifactId>tools</artifactId>
+      <groupId>jdk.tools</groupId>
+      <artifactId>jdk.tools</artifactId>
+      <version>jdk1.8.0</version>
+      <scope>system</scope>
+      <systemPath>${toolsjar}</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -334,6 +337,18 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
+      </properties>
+    </profile>
     <profile>
       <id>coverage</id>
       <build>
