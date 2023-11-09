@@ -2,7 +2,6 @@
 package com.redhat.insights.agent; /* Copyright (C) Red Hat 2023 */
 
 import com.redhat.insights.InsightsCustomScheduledExecutor;
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.InsightsReportController;
 import com.redhat.insights.InsightsScheduler;
 import com.redhat.insights.config.InsightsConfiguration;
@@ -11,6 +10,7 @@ import com.redhat.insights.doubles.NoopInsightsLogger;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
+import com.redhat.insights.reports.InsightsReport;
 import java.lang.instrument.Instrumentation;
 import java.time.Duration;
 import java.util.concurrent.BlockingQueue;

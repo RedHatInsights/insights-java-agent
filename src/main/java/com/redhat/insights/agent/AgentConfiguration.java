@@ -85,4 +85,8 @@ public final class AgentConfiguration implements InsightsConfiguration {
     }
     return false;
   }
+
+  public boolean isDebug() {
+    return "true".equalsIgnoreCase(args.getOrDefault("debug", "false"));
+  }
 }

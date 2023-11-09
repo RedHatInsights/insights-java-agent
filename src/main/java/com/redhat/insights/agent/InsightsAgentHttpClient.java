@@ -4,10 +4,10 @@ package com.redhat.insights.agent;
 import static com.redhat.insights.InsightsErrorCode.*;
 
 import com.redhat.insights.InsightsException;
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.config.InsightsConfiguration;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.logging.InsightsLogger;
+import com.redhat.insights.reports.InsightsReport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
