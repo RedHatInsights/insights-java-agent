@@ -8,14 +8,14 @@
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
-<!--    <maven.compiler.release>8</maven.compiler.release>-->
+    <maven.compiler.release>8</maven.compiler.release>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <skip.spotless>false</skip.spotless>
 
     <!-- Core dependencies versions -->
-    <runtimes.java.api.version>${project.version}</runtimes.java.api.version>
+    <runtimes.java.api.version>1.1.1-SNAPSHOT</runtimes.java.api.version>
     <apache.httpclient.version>4.5.14</apache.httpclient.version>
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
     <apache.httpmime.version>4.5.14</apache.httpmime.version>
@@ -47,6 +47,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>runtimes-java-api</artifactId>
+        <version>${runtimes.java.api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>runtimes-java-core-runtime</artifactId>
         <version>${runtimes.java.api.version}</version>
       </dependency>
 
@@ -127,11 +132,23 @@
   <dependency>
     <groupId>${project.groupId}</groupId>
     <artifactId>runtimes-java-api</artifactId>
+    <exclusions>
+      <exclusion>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+      </exclusion>
+    </exclusions>
   </dependency>
 
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -141,7 +158,7 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
     </dependency>
-
+    
     <dependency>
       <groupId>jdk.tools</groupId>
       <artifactId>jdk.tools</artifactId>
@@ -359,7 +376,7 @@
         </os>
       </activation>
       <properties>
-        <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
+        <toolsjar>${java.home}/../java-1.8.0/lib/tools.jar</toolsjar>
       </properties>
     </profile>
     <profile>

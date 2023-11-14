@@ -4,10 +4,10 @@ package com.redhat.insights.agent;
 import static com.redhat.insights.InsightsErrorCode.*;
 
 import com.redhat.insights.InsightsException;
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.config.InsightsConfiguration;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.logging.InsightsLogger;
+import com.redhat.insights.reports.InsightsReport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -62,8 +62,8 @@ public class InsightsAgentHttpClient implements InsightsHttpClient {
   @Override
   public void sendInsightsReport(String filename, InsightsReport report) {
     decorate(report);
-    String json = report.serialize();
-    logger.debug("Red Hat Insights Report:\n" + json);
+    byte[] json = report.serializeRaw();
+    logger.debug("Red Hat Insights Report:\n" + new String(json, StandardCharsets.UTF_8));
     sendCompressedInsightsReport(filename, InsightsHttpClient.gzipReport(json));
   }
 

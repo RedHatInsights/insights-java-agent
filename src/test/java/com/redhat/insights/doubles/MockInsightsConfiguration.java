@@ -17,7 +17,7 @@ public final class MockInsightsConfiguration extends DefaultInsightsConfiguratio
   private final Duration connectPeriod;
   private final Duration updatePeriod;
   private final long httpClientRetryInitialDelay;
-  private final long httpClientRetryBackoffFactor;
+  private final double httpClientRetryBackoffFactor;
   private final int httpClientRetryMaxAttemps;
 
   private MockInsightsConfiguration(
@@ -31,7 +31,7 @@ public final class MockInsightsConfiguration extends DefaultInsightsConfiguratio
       Duration connectPeriod,
       Duration updatePeriod,
       long httpClientRetryInitialDelay,
-      long httpClientRetryBackoffFactor,
+      double httpClientRetryBackoffFactor,
       int httpClientRetryMaxAttemps) {
     this.identificationName = identificationName;
     this.certFilePath = certFilePath;
@@ -161,7 +161,7 @@ public final class MockInsightsConfiguration extends DefaultInsightsConfiguratio
   }
 
   @Override
-  public long getHttpClientRetryBackoffFactor() {
+  public double getHttpClientRetryBackoffFactor() {
     return httpClientRetryBackoffFactor;
   }
 

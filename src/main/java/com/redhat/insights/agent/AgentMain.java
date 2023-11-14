@@ -1,17 +1,18 @@
 /* Copyright (C) Red Hat 2023 */
 package com.redhat.insights.agent;
 
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.InsightsReportController;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.logging.JulLogger;
+import com.redhat.insights.reports.InsightsReport;
 import com.redhat.insights.tls.PEMSupport;
 import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -65,7 +66,7 @@ public final class AgentMain {
 
   static Optional<AgentConfiguration> parseArgs(InsightsLogger logger, String agentArgs) {
     Map<String, String> out = new HashMap<>();
-    for (String pair : agentArgs.split(";")) {
+    for (String pair : agentArgs.split(",")) {
       String[] kv = pair.split("=");
       if (kv.length != 2) {
         logger.error(
@@ -96,7 +97,9 @@ public final class AgentMain {
   }
 
   private void start() {
-    final InsightsReport simpleReport = AgentBasicReport.of(logger, configuration);
+    final JBossInsightsWrapperSubReport subReport = new JBossInsightsWrapperSubReport(logger);
+    final InsightsReport simpleReport =
+        AgentBasicReport.of(logger, configuration, Collections.singletonMap("jboss", subReport));
     final PEMSupport pem = new PEMSupport(logger, configuration);
 
     final Supplier<InsightsHttpClient> httpClientSupplier =

@@ -38,6 +38,11 @@ build/
 # VS Code
 .vscode
 
+# Apache NetBeans
+nbactions.xml
+nb-configuration.xml
+catalog.xml
+
 # Gradle local
 .gradle/
 

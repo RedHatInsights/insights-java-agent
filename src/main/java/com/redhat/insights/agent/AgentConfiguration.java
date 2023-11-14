@@ -23,6 +23,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
     this.args = args;
   }
 
+  @Override
   public Optional<String> getMaybeAuthToken() {
     String value = args.get(AGENT_ARG_TOKEN);
     if (value != null) {

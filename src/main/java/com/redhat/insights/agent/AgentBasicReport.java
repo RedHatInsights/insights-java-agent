@@ -1,10 +1,10 @@
 /* Copyright (C) Red Hat 2023 */
 package com.redhat.insights.agent;
 
-import com.redhat.insights.AbstractTopLevelReportBase;
-import com.redhat.insights.InsightsSubreport;
 import com.redhat.insights.config.InsightsConfiguration;
 import com.redhat.insights.logging.InsightsLogger;
+import com.redhat.insights.reports.AbstractTopLevelReportBase;
+import com.redhat.insights.reports.InsightsSubreport;
 import java.util.Collections;
 import java.util.Map;
 
@@ -18,6 +18,13 @@ public class AgentBasicReport extends AbstractTopLevelReportBase {
 
   public static AgentBasicReport of(InsightsLogger logger, InsightsConfiguration configuration) {
     return new AgentBasicReport(logger, configuration, Collections.emptyMap());
+  }
+
+  public static AgentBasicReport of(
+      InsightsLogger logger,
+      InsightsConfiguration configuration,
+      Map<String, InsightsSubreport> subReports) {
+    return new AgentBasicReport(logger, configuration, subReports);
   }
 
   @Override
