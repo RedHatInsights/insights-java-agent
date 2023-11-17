@@ -8,7 +8,7 @@
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
-<!--    <maven.compiler.release>8</maven.compiler.release>-->
+    <!--    <maven.compiler.release>8</maven.compiler.release>-->
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,7 +29,7 @@
     <!-- Plugins versions -->
     <maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version>
     <google-java-format.version>1.7</google-java-format.version>
-    <spotless-maven-plugin.version>1.31.3</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.29.0</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
@@ -66,14 +66,14 @@
         <version>${apache.httpmime.version}</version>
       </dependency>
 
-<!--      Tools jar -->
-<!--      <dependency>-->
-<!--        <groupId>com.sun</groupId>-->
-<!--        <artifactId>tools</artifactId>-->
-<!--        <scope>system</scope>-->
-<!--        <systemPath>${toolsjar}</systemPath>-->
-<!--        <version>1.8.0</version>-->
-<!--      </dependency>-->
+      <!--      Tools jar -->
+      <!--      <dependency>-->
+      <!--        <groupId>com.sun</groupId>-->
+      <!--        <artifactId>tools</artifactId>-->
+      <!--        <scope>system</scope>-->
+      <!--        <systemPath>${toolsjar}</systemPath>-->
+      <!--        <version>1.8.0</version>-->
+      <!--      </dependency>-->
 
       <!-- Test dependencies -->
       <dependency>
@@ -104,30 +104,29 @@
         <scope>test</scope>
       </dependency>
 
+      <!-- Byte Buddy is used for testing the agent -->
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${byte-buddy.version}</version>
+        <scope>test</scope>
+      </dependency>
 
-    <!-- Byte Buddy is used for testing the agent -->
-    <dependency>
-      <groupId>net.bytebuddy</groupId>
-      <artifactId>byte-buddy</artifactId>
-      <version>${byte-buddy.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>net.bytebuddy</groupId>
-      <artifactId>byte-buddy-agent</artifactId>
-      <version>${byte-buddy.version}</version>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${byte-buddy.version}</version>
+        <scope>test</scope>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
-  <dependency>
-    <groupId>${project.groupId}</groupId>
-    <artifactId>runtimes-java-api</artifactId>
-  </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>runtimes-java-api</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -249,7 +248,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-<!--        <version>${spotless-maven-plugin.version}</version>-->
+        <!--        <version>${spotless-maven-plugin.version}</version>-->
         <configuration>
           <skip>${skip.spotless}</skip>
           <!-- optional: limit format enforcement to just the files changed by this feature branch -->
@@ -279,8 +278,8 @@
             <googleJavaFormat>
               <version>${google-java-format.version}</version>
               <style>GOOGLE</style>
-<!--              <reflowLongStrings>true</reflowLongStrings>-->
-<!--              <groupArtifact>com.google.googlejavaformat:google-java-format</groupArtifact>-->
+              <!--              <reflowLongStrings>true</reflowLongStrings>-->
+              <!--              <groupArtifact>com.google.googlejavaformat:google-java-format</groupArtifact>-->
             </googleJavaFormat>
 
             <!-- make sure every file has the following copyright header.
