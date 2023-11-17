@@ -4,10 +4,10 @@ package com.redhat.insights.agent;
 import static com.redhat.insights.InsightsErrorCode.*;
 
 import com.redhat.insights.InsightsException;
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.config.InsightsConfiguration;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.logging.InsightsLogger;
+import com.redhat.insights.reports.InsightsReport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -27,8 +27,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
-/** @author Emmanuel Hugonnet (c) 2023 Red Hat, Inc. */
-public class InsightsAgentHttpClient implements InsightsHttpClient {
+public final class InsightsAgentHttpClient implements InsightsHttpClient {
   private final InsightsLogger logger;
   private static final ContentType GENERAL_CONTENT_TYPE = ContentType.create(GENERAL_MIME_TYPE);
   private final Supplier<SSLContext> sslContextSupplier;

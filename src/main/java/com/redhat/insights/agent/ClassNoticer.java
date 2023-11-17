@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-public class ClassNoticer implements ClassFileTransformer {
+public final class ClassNoticer implements ClassFileTransformer {
   private final InsightsLogger logger;
   private final BlockingQueue<JarInfo> jarsToSend;
   private final JarAnalyzer analyzer;

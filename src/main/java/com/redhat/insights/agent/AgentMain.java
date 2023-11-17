@@ -1,12 +1,13 @@
 /* Copyright (C) Red Hat 2023 */
 package com.redhat.insights.agent;
 
-import com.redhat.insights.InsightsReport;
 import com.redhat.insights.InsightsReportController;
+import com.redhat.insights.http.InsightsFileWritingClient;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.logging.JulLogger;
+import com.redhat.insights.reports.InsightsReport;
 import com.redhat.insights.tls.PEMSupport;
 import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
@@ -19,10 +20,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
+/** Main class for the agent. */
 public final class AgentMain {
   private final InsightsLogger logger;
   private final AgentConfiguration configuration;
   private final BlockingQueue<JarInfo> waitingJars;
+
+  private static boolean loaded = false;
 
   private AgentMain(
       InsightsLogger logger, AgentConfiguration configuration, BlockingQueue<JarInfo> jarsToSend) {
@@ -39,8 +43,22 @@ public final class AgentMain {
     startAgent(agentArgs, instrumentation);
   }
 
+  /**
+   * Real entry point for the agent.
+   *
+   * @param agentArgs the agent argument string
+   * @param instrumentation the instrumentation object, only used for class notification
+   */
   public static void startAgent(String agentArgs, Instrumentation instrumentation) {
     InsightsLogger logger = new JulLogger("AgentMain");
+    synchronized (AgentMain.class) {
+      if (loaded) {
+        logger.warning("Insights agent already loaded, skipping");
+        return;
+      }
+      loaded = true;
+    }
+
     if (agentArgs == null || "".equals(agentArgs)) {
       logger.error("Unable to start Red Hat Insights client: Need config arguments");
       return;
@@ -59,10 +77,16 @@ public final class AgentMain {
       instrumentation.addTransformer(noticer);
     } catch (Throwable t) {
       logger.error("Unable to start Red Hat Insights client", t);
-      return;
     }
   }
 
+  /**
+   * Parse the agent arguments from the form "key1=value1;key2=value2;..."
+   *
+   * @param logger
+   * @param agentArgs
+   * @return
+   */
   static Optional<AgentConfiguration> parseArgs(InsightsLogger logger, String agentArgs) {
     Map<String, String> out = new HashMap<>();
     for (String pair : agentArgs.split(";")) {
@@ -82,13 +106,16 @@ public final class AgentMain {
           "Unable to start Red Hat Insights client: App requires a name for identification");
       return Optional.empty();
     }
+    logger.debug(config.toString());
 
     if (!config.getMaybeAuthToken().isPresent()) {
       Path certPath = Paths.get(config.getCertFilePath());
       Path keyPath = Paths.get(config.getKeyFilePath());
       if (!Files.exists(certPath) || !Files.exists(keyPath)) {
-        logger.error("Unable to start Red Hat Insights client: Missing certificate or key files");
-        return Optional.empty();
+        if (!out.containsKey("debug") || !"true".equals(out.get("debug"))) {
+          logger.error("Unable to start Red Hat Insights client: Missing certificate or key files");
+          return Optional.empty();
+        }
       }
     }
 
@@ -96,14 +123,18 @@ public final class AgentMain {
   }
 
   private void start() {
-    final InsightsReport simpleReport = AgentBasicReport.of(logger, configuration);
+    final InsightsReport report = AgentBasicReport.of(logger, configuration);
     final PEMSupport pem = new PEMSupport(logger, configuration);
 
-    final Supplier<InsightsHttpClient> httpClientSupplier =
-        () -> new InsightsAgentHttpClient(logger, configuration, () -> pem.createTLSContext());
+    Supplier<InsightsHttpClient> httpClientSupplier;
+    if (configuration.isDebug()) {
+      httpClientSupplier = () -> new InsightsFileWritingClient(logger, configuration);
+    } else {
+      httpClientSupplier =
+          () -> new InsightsAgentHttpClient(logger, configuration, () -> pem.createTLSContext());
+    }
     final InsightsReportController controller =
-        InsightsReportController.of(
-            logger, configuration, simpleReport, httpClientSupplier, waitingJars);
+        InsightsReportController.of(logger, configuration, report, httpClientSupplier, waitingJars);
     controller.generate();
   }
 }
