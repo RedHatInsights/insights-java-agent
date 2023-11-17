@@ -21,7 +21,7 @@ public class AgentBasicReport extends AbstractTopLevelReportBase {
     Map<String, InsightsSubreport> reports = new HashMap<>();
     ClasspathJarInfoSubreport jarsReport = new ClasspathJarInfoSubreport(logger);
     reports.put("jars", jarsReport);
-    reports.put("details", AgentSubreport.of(jarsReport));
+    reports.put("details", AgentSubreport.of(logger, jarsReport));
     return new AgentBasicReport(logger, configuration, reports);
   }
 
