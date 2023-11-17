@@ -27,8 +27,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
-/** @author Emmanuel Hugonnet (c) 2023 Red Hat, Inc. */
-public class InsightsAgentHttpClient implements InsightsHttpClient {
+public final class InsightsAgentHttpClient implements InsightsHttpClient {
   private final InsightsLogger logger;
   private static final ContentType GENERAL_CONTENT_TYPE = ContentType.create(GENERAL_MIME_TYPE);
   private final Supplier<SSLContext> sslContextSupplier;

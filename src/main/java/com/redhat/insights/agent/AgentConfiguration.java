@@ -89,4 +89,9 @@ public final class AgentConfiguration implements InsightsConfiguration {
   public boolean isDebug() {
     return "true".equalsIgnoreCase(args.getOrDefault("debug", "false"));
   }
+
+  @Override
+  public String toString() {
+    return "AgentConfiguration{" + "args=" + args + '}';
+  }
 }
