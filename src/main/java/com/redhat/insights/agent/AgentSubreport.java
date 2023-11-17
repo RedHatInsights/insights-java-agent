@@ -22,11 +22,15 @@ public class AgentSubreport implements InsightsSubreport {
 
   private String guessedWorkload = "Unidentified";
 
-  private static final Map<String, String> guesses = new HashMap<>();
+  private static final Map<String, String> classGuesses = new HashMap<>();
+  private static final Map<String, String> jarGuesses = new HashMap<>();
+  // tomcat-catalina
 
   static {
-    guesses.put("org/springframework/boot/SpringApplication", "Spring Boot");
-    guesses.put("io/quarkus/bootstrap/QuarkusBootstrap", "Quarkus");
+    classGuesses.put("org/springframework/boot/SpringApplication", "Spring Boot");
+    classGuesses.put("io/quarkus/bootstrap/QuarkusBootstrap", "Quarkus");
+
+    jarGuesses.put("tomcat-catalina", "Tomcat / JWS");
   }
 
   private AgentSubreport(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
@@ -58,7 +62,21 @@ public class AgentSubreport implements InsightsSubreport {
     }
   }
 
-  void fingerprintByJar(Collection<JarInfo> jarInfos) {}
+  void fingerprintByJar(Collection<JarInfo> jarInfos) {
+    String workload = "";
+    for (JarInfo jar : jarInfos) {
+      for (Map.Entry<String, String> guess : jarGuesses.entrySet()) {
+        if (jar.name().contains(guess.getKey())) {
+          // FIXME Handle multiple matches "Possibly: X or Y"
+          workload = guess.getValue();
+          break;
+        }
+      }
+    }
+    if (!workload.isEmpty()) {
+      guessedWorkload = workload;
+    }
+  }
 
   void fingerprintByClass(JarInfo jarInfo) {
     // Deal with the special cases first
@@ -68,7 +86,7 @@ public class AgentSubreport implements InsightsSubreport {
     }
     // Try to find Quarkus
     try {
-      Class.forName("io.quarkus.bootstrap.QuarkusBootstrap");
+      Class.forName("io.quarkus.runner.ApplicationImpl");
       guessedWorkload = "Quarkus";
       return;
     } catch (ClassNotFoundException __) {
@@ -85,7 +103,7 @@ public class AgentSubreport implements InsightsSubreport {
         if (entry.getName().endsWith(".class")) {
           String className = entry.getName();
           logger.info("Found class: " + className);
-          for (Map.Entry<String, String> guess : guesses.entrySet()) {
+          for (Map.Entry<String, String> guess : classGuesses.entrySet()) {
             if (className.contains(guess.getKey())) {
               // FIXME Handle multiple matches "Possibly: X or Y"
               workload = guess.getValue();
