@@ -5,7 +5,6 @@ import com.redhat.insights.config.InsightsConfiguration;
 import com.redhat.insights.jars.ClasspathJarInfoSubreport;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.AbstractTopLevelReportBase;
-import com.redhat.insights.reports.AppInsightsSubreport;
 import com.redhat.insights.reports.InsightsSubreport;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +19,9 @@ public class AgentBasicReport extends AbstractTopLevelReportBase {
 
   public static AgentBasicReport of(InsightsLogger logger, InsightsConfiguration configuration) {
     Map<String, InsightsSubreport> reports = new HashMap<>();
-    reports.put("jars", new ClasspathJarInfoSubreport(logger));
-    reports.put("details", new AppInsightsSubreport());
+    ClasspathJarInfoSubreport jarsReport = new ClasspathJarInfoSubreport(logger);
+    reports.put("jars", jarsReport);
+    reports.put("details", AgentSubreport.of(jarsReport));
     return new AgentBasicReport(logger, configuration, reports);
   }
 

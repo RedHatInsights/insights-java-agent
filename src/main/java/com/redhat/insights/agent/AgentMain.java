@@ -99,7 +99,7 @@ public final class AgentMain {
   }
 
   private void start() {
-    final InsightsReport simpleReport = AgentBasicReport.of(logger, configuration);
+    final InsightsReport report = AgentBasicReport.of(logger, configuration);
     final PEMSupport pem = new PEMSupport(logger, configuration);
 
     Supplier<InsightsHttpClient> httpClientSupplier;
@@ -110,8 +110,7 @@ public final class AgentMain {
           () -> new InsightsAgentHttpClient(logger, configuration, () -> pem.createTLSContext());
     }
     final InsightsReportController controller =
-        InsightsReportController.of(
-            logger, configuration, simpleReport, httpClientSupplier, waitingJars);
+        InsightsReportController.of(logger, configuration, report, httpClientSupplier, waitingJars);
     controller.generate();
   }
 }

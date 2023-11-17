@@ -15,7 +15,7 @@
     <skip.spotless>false</skip.spotless>
 
     <!-- Core dependencies versions -->
-    <runtimes.java.api.version>1.1.1-SNAPSHOT</runtimes.java.api.version>
+    <runtimes.java.api.version>2.0.0</runtimes.java.api.version>
     <apache.httpclient.version>4.5.14</apache.httpclient.version>
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
     <apache.httpmime.version>4.5.14</apache.httpmime.version>
