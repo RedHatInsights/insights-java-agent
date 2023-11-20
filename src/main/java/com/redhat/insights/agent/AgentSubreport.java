@@ -6,17 +6,13 @@ import com.redhat.insights.jars.ClasspathJarInfoSubreport;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsSubreport;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.function.Function;
 
 public class AgentSubreport implements InsightsSubreport {
   private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -27,15 +23,15 @@ public class AgentSubreport implements InsightsSubreport {
 
   private String guessedWorkload = "Unidentified";
 
-  private static final Map<String, String> classGuesses = new HashMap<>();
-  private static final Map<String, String> jarGuesses = new HashMap<>();
-  // tomcat-catalina
+  private static final Map<String, Function<Class<?>, String>> activeGuesses = new HashMap<>();
 
   static {
-    classGuesses.put("org/springframework/boot/SpringApplication", "Spring Boot");
-    classGuesses.put("io/quarkus/bootstrap/QuarkusBootstrap", "Quarkus");
+    activeGuesses.put("org.springframework.boot.SpringApplication", __ -> "Spring Boot");
+    activeGuesses.put("org.jboss.modules.Module", AgentSubreport::fingerprintJBoss);
+    activeGuesses.put(
+        "io.quarkus.bootstrap.runner.QuarkusEntryPoint", AgentSubreport::fingerprintQuarkus);
 
-    jarGuesses.put("tomcat-catalina", "Tomcat / JWS");
+    //    jarGuesses.put("tomcat-catalina", "Tomcat / JWS");
   }
 
   private AgentSubreport(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
@@ -58,24 +54,21 @@ public class AgentSubreport implements InsightsSubreport {
     Collection<JarInfo> jarInfos = jarsReport.getJarInfos();
     if (jarInfos.isEmpty()) {
       logger.warning("No JARs found in AgentSubreport");
-    } else if (jarInfos.size() == 1) {
-      // Blob / uberjar - use class based fingerprinting
-      fingerprintByClass(jarInfos.toArray(new JarInfo[0])[0]);
     } else {
-      // JAR based fingerprinting
-      fingerprintByJar(jarInfos);
+      fingerprintReflectively(jarInfos);
     }
   }
 
-  void fingerprintByJar(Collection<JarInfo> jarInfos) {
+  private void fingerprintReflectively(Collection<JarInfo> jarInfos) {
     String workload = "";
-    for (JarInfo jar : jarInfos) {
-      for (Map.Entry<String, String> guess : jarGuesses.entrySet()) {
-        if (jar.name().contains(guess.getKey())) {
-          // FIXME Handle multiple matches "Possibly: X or Y"
-          workload = guess.getValue();
-          break;
-        }
+    for (Map.Entry<String, Function<Class<?>, String>> guess : activeGuesses.entrySet()) {
+      try {
+        Class<?> clazz = Class.forName(guess.getKey());
+        // FIXME Handle multiple matches "Possibly: X or Y"
+        workload = guess.getValue().apply(clazz);
+        break;
+      } catch (ClassNotFoundException __) {
+        // not found - ignore
       }
     }
     if (!workload.isEmpty()) {
@@ -83,59 +76,12 @@ public class AgentSubreport implements InsightsSubreport {
     }
   }
 
-  void fingerprintByClass(JarInfo jarInfo) {
-    // Deal with the special cases first
-    if (jarInfo.name().contains("jboss-modules")) {
-      try {
-        Class<?> moduleClass =
-            this.getClass().getClassLoader().loadClass("org.jboss.modules.Module");
-        guessedWorkload = fingerprintJBoss(moduleClass);
-        return;
-      } catch (ClassNotFoundException __) {
-        // not found
-      }
-      guessedWorkload = "Unknown EAP / Wildfly";
-      return;
-    }
-    // Try to find Quarkus
-    try {
-      Class<?> qClass = Class.forName("io.quarkus.bootstrap.runner.QuarkusEntryPoint");
-      String quarkusVersion = qClass.getPackage().getImplementationVersion();
-      guessedWorkload = "Quarkus " + quarkusVersion;
-      return;
-    } catch (ClassNotFoundException __) {
-      // not found
-    }
-
-    // Open the JAR and look for classes
-    String classLocation = String.valueOf(System.getProperties().get("java.class.path"));
-    try (ZipInputStream zipIn =
-        new ZipInputStream(Files.newInputStream(Paths.get(classLocation)))) {
-      ZipEntry entry = zipIn.getNextEntry();
-      String workload = "";
-      while (entry != null) {
-        if (entry.getName().endsWith(".class")) {
-          String className = entry.getName();
-          logger.info("Found class: " + className);
-          for (Map.Entry<String, String> guess : classGuesses.entrySet()) {
-            if (className.contains(guess.getKey())) {
-              // FIXME Handle multiple matches "Possibly: X or Y"
-              workload = guess.getValue();
-              break;
-            }
-          }
-        }
-        entry = zipIn.getNextEntry();
-      }
-      if (!workload.isEmpty()) {
-        guessedWorkload = workload;
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  static String fingerprintQuarkus(Class<?> qClazz) {
+    String quarkusVersion = qClazz.getPackage().getImplementationVersion();
+    return "Quarkus " + quarkusVersion;
   }
 
-  String fingerprintJBoss(Class<?> moduleClass) {
+  static String fingerprintJBoss(Class<?> moduleClass) {
     try {
       Method getBootModuleLoaderMethod =
           moduleClass.getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
@@ -188,13 +134,13 @@ public class AgentSubreport implements InsightsSubreport {
         | ClassNotFoundException
         | IllegalAccessException
         | IllegalArgumentException
-        | InvocationTargetException ex) {
-      logger.error(ex.getMessage(), ex);
+        | InvocationTargetException __) {
+      // ignore
     }
     return "Unknown EAP / Wildfly - possibly misconfigured";
   }
 
-  private Class<?> getJBossModuleLoaderClass(Class<?> subModuleLoaderClass) {
+  private static Class<?> getJBossModuleLoaderClass(Class<?> subModuleLoaderClass) {
     if ("org.jboss.modules.ModuleLoader".equals(subModuleLoaderClass.getName())) {
       return subModuleLoaderClass;
     }
