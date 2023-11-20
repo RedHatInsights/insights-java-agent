@@ -30,8 +30,7 @@ public class AgentSubreport implements InsightsSubreport {
     activeGuesses.put("org.jboss.modules.Module", AgentSubreport::fingerprintJBoss);
     activeGuesses.put(
         "io.quarkus.bootstrap.runner.QuarkusEntryPoint", AgentSubreport::fingerprintQuarkus);
-
-    //    jarGuesses.put("tomcat-catalina", "Tomcat / JWS");
+    activeGuesses.put("org.apache.catalina.Server", __ -> "Tomcat / JWS");
   }
 
   private AgentSubreport(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
