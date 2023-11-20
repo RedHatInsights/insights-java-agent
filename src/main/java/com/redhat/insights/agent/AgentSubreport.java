@@ -135,26 +135,37 @@ public class AgentSubreport implements InsightsSubreport {
     }
   }
 
+  public Class<?> getModuleClass() throws ClassNotFoundException {
+    return this.getClass().getClassLoader().loadClass("org.jboss.modules.Module");
+  }
+
+  public ClassLoader getModuleClassLoader(Object moduleLoader, String moduleName)
+      throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
+          IllegalArgumentException, InvocationTargetException {
+    Method getClassLoaderMethod =
+        getModuleClass().getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
+    return (ClassLoader)
+        getClassLoaderMethod.invoke(loadModule(moduleLoader, moduleName), EMPTY_OBJECT_ARRAY);
+  }
+
+  public Object loadModule(Object moduleLoader, String moduleName)
+      throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
+          IllegalArgumentException, InvocationTargetException {
+    Method loadModuleMethod =
+        moduleLoader.getClass().getMethod("loadModule", new Class[] {String.class});
+    return loadModuleMethod.invoke(moduleLoader, moduleName);
+  }
+
   String fingerprintJBoss(Class<?> moduleClass) {
     try {
       Method getBootModuleLoaderMethod =
-          moduleClass.getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
-      Method getClassLoaderMethod =
-          moduleClass.getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
+          getModuleClass().getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
       Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
-      Method loadModuleMethod =
-          moduleLoader.getClass().getMethod("loadModule", new Class[] {String.class});
-      Object versionModule = loadModuleMethod.invoke(moduleLoader, "org.jboss.as.version");
       ClassLoader versionModuleClassLoader =
-          (ClassLoader) getClassLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
-      Method getContextModuleLoaderMethod =
-          moduleClass.getDeclaredMethod("getContextModuleLoader", EMPTY_CLASS_ARRAY);
-      Object versionModuleLoader =
-          getContextModuleLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
+          getModuleClassLoader(moduleLoader, "org.jboss.as.version");
       String home = System.getProperty("jboss.home.dir", null);
-
       if (home != null) {
-        Class<?> moduleLoaderClass = getJBossModuleLoaderClass(versionModuleLoader.getClass());
+        Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
         Class<?> productConfigClass =
             versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
         Method fromFilesystemSlotMethod =
@@ -162,7 +173,7 @@ public class AgentSubreport implements InsightsSubreport {
                 "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
         Object productConfig =
             fromFilesystemSlotMethod.invoke(
-                null, moduleLoaderClass.cast(versionModuleLoader), home, Collections.emptyMap());
+                null, moduleLoaderClass.cast(moduleLoader), home, Collections.emptyMap());
         //        this.productName =
         //                (String)
         //                        productConfigClass
