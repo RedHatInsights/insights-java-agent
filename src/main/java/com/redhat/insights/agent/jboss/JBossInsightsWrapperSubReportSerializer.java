@@ -1,5 +1,5 @@
 /* Copyright (C) Red Hat 2023 */
-package com.redhat.insights.agent;
+package com.redhat.insights.agent.jboss;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -14,13 +14,14 @@ public class JBossInsightsWrapperSubReportSerializer extends JsonSerializer<Insi
   public void serialize(
       InsightsSubreport subReport, JsonGenerator generator, SerializerProvider serializerProvider)
       throws IOException {
-    JBossInsightsWrapperSubReport jBossInsightsWrapperSubReport =
-        (JBossInsightsWrapperSubReport) subReport;
+    JBossInsightsWrapperSubReport wrapper = (JBossInsightsWrapperSubReport) subReport;
+    JBossInsightsBasicSubReport basic = wrapper.getBasic();
+    JBossInsightsConfigurationSubReport configuration = wrapper.getConfiguration();
     generator.writeStartObject();
-    generator.writeStringField("name", jBossInsightsWrapperSubReport.getProduct());
-    generator.writeStringField("version", jBossInsightsWrapperSubReport.getVersion());
-    generator.writeStringField("eap-version", jBossInsightsWrapperSubReport.getProductVersion());
-    generator.writeStringField("full-name", jBossInsightsWrapperSubReport.getProductFullName());
+    generator.writeFieldName("eap-installtion");
+    basic.getSerializer().serialize(basic, generator, serializerProvider);
+    generator.writeFieldName("eap-configuration");
+    configuration.getSerializer().serialize(configuration, generator, serializerProvider);
     generator.writeEndObject();
     generator.flush();
   }

@@ -2,6 +2,7 @@
 package com.redhat.insights.agent;
 
 import com.redhat.insights.InsightsReportController;
+import com.redhat.insights.agent.jboss.JBossInsightsWrapperSubReport;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
@@ -66,7 +67,7 @@ public final class AgentMain {
 
   static Optional<AgentConfiguration> parseArgs(InsightsLogger logger, String agentArgs) {
     Map<String, String> out = new HashMap<>();
-    for (String pair : agentArgs.split(",")) {
+    for (String pair : agentArgs.split(";")) {
       String[] kv = pair.split("=");
       if (kv.length != 2) {
         logger.error(

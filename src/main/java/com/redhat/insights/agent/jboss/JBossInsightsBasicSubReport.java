@@ -1,5 +1,8 @@
 /* Copyright (C) Red Hat 2023 */
-package com.redhat.insights.agent;
+package com.redhat.insights.agent.jboss;
+
+import static com.redhat.insights.agent.jboss.JBossModuleHelper.EMPTY_CLASS_ARRAY;
+import static com.redhat.insights.agent.jboss.JBossModuleHelper.EMPTY_OBJECT_ARRAY;
 
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.redhat.insights.logging.InsightsLogger;
@@ -12,9 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /** @author Emmanuel Hugonnet (c) 2023 Red Hat, Inc. */
-class JBossInsightsWrapperSubReport implements InsightsSubreport {
-  private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
-  private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+public class JBossInsightsBasicSubReport implements InsightsSubreport {
 
   private final InsightsLogger logger;
   private String productName = null;
@@ -22,31 +23,20 @@ class JBossInsightsWrapperSubReport implements InsightsSubreport {
   private String productFullName = null;
   private boolean isProduct = false;
 
-  JBossInsightsWrapperSubReport(InsightsLogger logger) {
+  public JBossInsightsBasicSubReport(InsightsLogger logger) {
     this.logger = logger;
   }
 
   @Override
   public void generateReport() {
     try {
-      Class<?> moduleClass = this.getClass().getClassLoader().loadClass("org.jboss.modules.Module");
-      Method getBootModuleLoaderMethod =
-          moduleClass.getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
-      Method getClassLoaderMethod =
-          moduleClass.getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
-      Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
-      Method loadModuleMethod =
-          moduleLoader.getClass().getMethod("loadModule", new Class[] {String.class});
-      Object versionModule = loadModuleMethod.invoke(moduleLoader, "org.jboss.as.version");
+      System.out.println("Getting the server version " + productFullName);
       ClassLoader versionModuleClassLoader =
-          (ClassLoader) getClassLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
-      Method getContextModuleLoaderMethod =
-          moduleClass.getDeclaredMethod("getContextModuleLoader", EMPTY_CLASS_ARRAY);
-      Object versionModuleLoader =
-          getContextModuleLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
+          JBossModuleHelper.getModuleClassLoader("org.jboss.as.version");
       String home = getHome();
+      Object moduleLoader = JBossModuleHelper.getBootModuleLoader();
       if (home != null) {
-        Class moduleLoaderClass = getModuleLoaderClass(versionModuleLoader.getClass());
+        Class moduleLoaderClass = getModuleLoaderClass(moduleLoader.getClass());
         Class productConfigClass =
             versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
         Method fromFilesystemSlotMethod =
@@ -54,7 +44,7 @@ class JBossInsightsWrapperSubReport implements InsightsSubreport {
                 "fromFilesystemSlot", new Class[] {moduleLoaderClass, String.class, Map.class});
         Object productConfig =
             fromFilesystemSlotMethod.invoke(
-                null, moduleLoaderClass.cast(versionModuleLoader), home, Collections.emptyMap());
+                null, moduleLoaderClass.cast(moduleLoader), home, Collections.emptyMap());
         this.productName =
             (String)
                 productConfigClass
@@ -75,6 +65,7 @@ class JBossInsightsWrapperSubReport implements InsightsSubreport {
                 productConfigClass
                     .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
                     .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+        System.out.println("We have found the product version " + productFullName);
       }
     } catch (NoSuchMethodException
         | SecurityException
@@ -83,6 +74,8 @@ class JBossInsightsWrapperSubReport implements InsightsSubreport {
         | IllegalArgumentException
         | InvocationTargetException ex) {
       logger.error(ex.getMessage(), ex);
+      System.out.println("Error " + ex.getMessage());
+      ex.printStackTrace(System.out);
     }
   }
 
@@ -115,7 +108,7 @@ class JBossInsightsWrapperSubReport implements InsightsSubreport {
 
   @Override
   public JsonSerializer<InsightsSubreport> getSerializer() {
-    return new JBossInsightsWrapperSubReportSerializer();
+    return new JBossInsightsBasicSubReportSerializer();
   }
 
   String getProductVersion() {

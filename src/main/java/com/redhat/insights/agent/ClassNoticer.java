@@ -6,7 +6,6 @@ import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.ProtectionDomain;
@@ -61,13 +60,6 @@ public class ClassNoticer implements ClassFileTransformer {
     // If we haven't seen it before, add it to the set and enqueue it
     try {
       String jarLoc = jarUrl.toString();
-      if (jarLoc.endsWith("!/")) {
-        jarLoc = jarLoc.substring(0, jarLoc.lastIndexOf("!/"));
-        if (jarLoc.startsWith("jar:")) {
-          jarLoc = jarLoc.substring(4);
-        }
-        jarUrl = new URL(jarLoc);
-      }
       if (!seenUrls.contains(jarLoc)) {
         seenUrls.add(jarLoc);
         Optional<JarInfo> oJar = analyzer.process(jarUrl);
@@ -82,7 +74,7 @@ public class ClassNoticer implements ClassFileTransformer {
           }
         }
       }
-    } catch (URISyntaxException | MalformedURLException e) {
+    } catch (URISyntaxException e) {
       // Shouldn't be possible - so just log and carry on
       logger.error("Jar with bad URI seen, should not be possible: " + jarUrl);
     }
