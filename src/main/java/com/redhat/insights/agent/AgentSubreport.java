@@ -86,8 +86,9 @@ public class AgentSubreport implements InsightsSubreport {
     }
     // Try to find Quarkus
     try {
-      Class.forName("io.quarkus.runner.ApplicationImpl");
-      guessedWorkload = "Quarkus";
+      Class<?> qClass = Class.forName("io.quarkus.bootstrap.runner.QuarkusEntryPoint");
+      String quarkusVersion = qClass.getPackage().getImplementationVersion();
+      guessedWorkload = "Quarkus " + quarkusVersion;
       return;
     } catch (ClassNotFoundException __) {
       // not found
