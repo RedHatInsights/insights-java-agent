@@ -7,15 +7,20 @@ import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsSubreport;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class AgentSubreport implements InsightsSubreport {
+  private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
+  private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
   private final InsightsLogger logger;
   private final ClasspathJarInfoSubreport jarsReport;
@@ -81,7 +86,15 @@ public class AgentSubreport implements InsightsSubreport {
   void fingerprintByClass(JarInfo jarInfo) {
     // Deal with the special cases first
     if (jarInfo.name().contains("jboss-modules")) {
-      guessedWorkload = "EAP / Wildfly";
+      try {
+        Class<?> moduleClass =
+            this.getClass().getClassLoader().loadClass("org.jboss.modules.Module");
+        guessedWorkload = fingerprintJBoss(moduleClass);
+        return;
+      } catch (ClassNotFoundException __) {
+        // not found
+      }
+      guessedWorkload = "Unknown EAP / Wildfly";
       return;
     }
     // Try to find Quarkus
@@ -120,6 +133,76 @@ public class AgentSubreport implements InsightsSubreport {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  String fingerprintJBoss(Class<?> moduleClass) {
+    try {
+      Method getBootModuleLoaderMethod =
+          moduleClass.getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
+      Method getClassLoaderMethod =
+          moduleClass.getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
+      Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
+      Method loadModuleMethod =
+          moduleLoader.getClass().getMethod("loadModule", new Class[] {String.class});
+      Object versionModule = loadModuleMethod.invoke(moduleLoader, "org.jboss.as.version");
+      ClassLoader versionModuleClassLoader =
+          (ClassLoader) getClassLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
+      Method getContextModuleLoaderMethod =
+          moduleClass.getDeclaredMethod("getContextModuleLoader", EMPTY_CLASS_ARRAY);
+      Object versionModuleLoader =
+          getContextModuleLoaderMethod.invoke(versionModule, EMPTY_OBJECT_ARRAY);
+      String home = System.getProperty("jboss.home.dir", null);
+
+      if (home != null) {
+        Class<?> moduleLoaderClass = getJBossModuleLoaderClass(versionModuleLoader.getClass());
+        Class<?> productConfigClass =
+            versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
+        Method fromFilesystemSlotMethod =
+            productConfigClass.getDeclaredMethod(
+                "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
+        Object productConfig =
+            fromFilesystemSlotMethod.invoke(
+                null, moduleLoaderClass.cast(versionModuleLoader), home, Collections.emptyMap());
+        //        this.productName =
+        //                (String)
+        //                        productConfigClass
+        //                                .getDeclaredMethod("getProductName", EMPTY_CLASS_ARRAY)
+        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+        //        this.productVersion =
+        //                (String)
+        //                        productConfigClass
+        //                                .getDeclaredMethod("getProductVersion", EMPTY_CLASS_ARRAY)
+        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+        //        this.isProduct =
+        //                (Boolean)
+        //                        productConfigClass
+        //                                .getDeclaredMethod("isProduct", EMPTY_CLASS_ARRAY)
+        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+        return (String)
+            productConfigClass
+                .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
+                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+      }
+    } catch (NoSuchMethodException
+        | SecurityException
+        | ClassNotFoundException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException ex) {
+      logger.error(ex.getMessage(), ex);
+    }
+    return "Unknown EAP / Wildfly - possibly misconfigured";
+  }
+
+  private Class<?> getJBossModuleLoaderClass(Class<?> subModuleLoaderClass) {
+    if ("org.jboss.modules.ModuleLoader".equals(subModuleLoaderClass.getName())) {
+      return subModuleLoaderClass;
+    }
+    if ("java.lang.Object".equals(subModuleLoaderClass.getName())) {
+      throw new IllegalArgumentException(
+          subModuleLoaderClass + " is not a subclass of org.jboss.modules.ModuleLoader");
+    }
+    return getJBossModuleLoaderClass(subModuleLoaderClass.getSuperclass());
   }
 
   @Override
