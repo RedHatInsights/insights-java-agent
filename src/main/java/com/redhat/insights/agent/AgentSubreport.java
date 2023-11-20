@@ -86,40 +86,39 @@ public class AgentSubreport implements InsightsSubreport {
   }
 
   static ClassLoader getModuleClassLoader(Object moduleLoader, String moduleName)
-          throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
+      throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
           IllegalArgumentException, InvocationTargetException {
     Method getClassLoaderMethod =
-            getModuleClass().getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
+        getModuleClass().getDeclaredMethod("getClassLoader", EMPTY_CLASS_ARRAY);
     return (ClassLoader)
-            getClassLoaderMethod.invoke(loadModule(moduleLoader, moduleName), EMPTY_OBJECT_ARRAY);
+        getClassLoaderMethod.invoke(loadModule(moduleLoader, moduleName), EMPTY_OBJECT_ARRAY);
   }
 
   static Object loadModule(Object moduleLoader, String moduleName)
-          throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
+      throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
           IllegalArgumentException, InvocationTargetException {
-    Method loadModuleMethod =
-            moduleLoader.getClass().getMethod("loadModule", String.class);
+    Method loadModuleMethod = moduleLoader.getClass().getMethod("loadModule", String.class);
     return loadModuleMethod.invoke(moduleLoader, moduleName);
   }
 
   static String fingerprintJBoss(Class<?> moduleClass) {
     try {
       Method getBootModuleLoaderMethod =
-              getModuleClass().getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
+          getModuleClass().getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
       Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
       ClassLoader versionModuleClassLoader =
-              getModuleClassLoader(moduleLoader, "org.jboss.as.version");
+          getModuleClassLoader(moduleLoader, "org.jboss.as.version");
       String home = System.getProperty("jboss.home.dir", null);
       if (home != null) {
         Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
         Class<?> productConfigClass =
-                versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
+            versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
         Method fromFilesystemSlotMethod =
-                productConfigClass.getDeclaredMethod(
-                        "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
+            productConfigClass.getDeclaredMethod(
+                "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
         Object productConfig =
-                fromFilesystemSlotMethod.invoke(
-                        null, moduleLoaderClass.cast(moduleLoader), home, Collections.emptyMap());
+            fromFilesystemSlotMethod.invoke(
+                null, moduleLoaderClass.cast(moduleLoader), home, Collections.emptyMap());
         //        this.productName =
         //                (String)
         //                        productConfigClass
@@ -136,17 +135,17 @@ public class AgentSubreport implements InsightsSubreport {
         //                                .getDeclaredMethod("isProduct", EMPTY_CLASS_ARRAY)
         //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
         return (String)
-                productConfigClass
-                        .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
-                        .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+            productConfigClass
+                .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
+                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
       }
     } catch (NoSuchMethodException
-             | SecurityException
-             | ClassNotFoundException
-             | IllegalAccessException
-             | IllegalArgumentException
-             | InvocationTargetException ex) {
-        // ignore
+        | SecurityException
+        | ClassNotFoundException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException ex) {
+      // ignore
     }
     return "Unknown EAP / Wildfly - possibly misconfigured";
   }
@@ -157,7 +156,7 @@ public class AgentSubreport implements InsightsSubreport {
     }
     if ("java.lang.Object".equals(subModuleLoaderClass.getName())) {
       throw new IllegalArgumentException(
-              subModuleLoaderClass + " is not a subclass of org.jboss.modules.ModuleLoader");
+          subModuleLoaderClass + " is not a subclass of org.jboss.modules.ModuleLoader");
     }
     return getJBossModuleLoaderClass(subModuleLoaderClass.getSuperclass());
   }
