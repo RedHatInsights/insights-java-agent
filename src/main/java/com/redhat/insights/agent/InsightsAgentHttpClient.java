@@ -61,8 +61,8 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
   @Override
   public void sendInsightsReport(String filename, InsightsReport report) {
     decorate(report);
-    String json = report.serialize();
-    logger.debug("Red Hat Insights Report:\n" + json);
+    byte[] json = report.serializeRaw();
+    logger.debug("Red Hat Insights Report:\n" + new String(json, StandardCharsets.UTF_8));
     sendCompressedInsightsReport(filename, InsightsHttpClient.gzipReport(json));
   }
 
