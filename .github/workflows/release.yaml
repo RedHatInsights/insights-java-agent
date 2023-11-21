@@ -26,9 +26,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Run a build of the code base before release
-        run: mvn --batch-mode --no-transfer-progress clean install
+        run: ./mvnw --batch-mode --no-transfer-progress clean install
       - name: Set release version
-        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.inputs.version }}
+        run: ./mvnw --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.inputs.version }}
       - name: Commit & Push changes
         uses: actions-js/push@v1.4
         with:
@@ -45,7 +45,7 @@ jobs:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./release.sh
       - name: Set the next release version
-        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}-SNAPSHOT
+        run: ./mvnw --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}-SNAPSHOT
       - name: Commit & Push changes
         uses: actions-js/push@v1.4
         with:
