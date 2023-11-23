@@ -293,9 +293,6 @@
                 <relocation>
                   <pattern>com.redhat.insights</pattern>
                   <shadedPattern>${shade.prefix}</shadedPattern>
-                  <!--                  <includes>-->
-                  <!--                    <include>com.redhat.insights*</include>-->
-                  <!--                  </includes>-->
                   <excludes>
                     <exclude>com.redhat.insights.agent.*</exclude>
                   </excludes>
