@@ -56,6 +56,15 @@ public final class AgentMain {
         logger.warning("Insights agent already loaded, skipping");
         return;
       }
+      //      try {
+      //        // We need to check for the existence of the client, not just the agent.
+      //        // This is belt-and-braces in case this agent is ever loaded into an
+      //        // app that has built-in Insights support.
+      //        Class.forName("com.redhat.insights.InsightsScheduler");
+      //        return;
+      //      } catch (ClassNotFoundException __) {
+      //        // Not loaded yet, continue
+      //      }
       loaded = true;
     }
 

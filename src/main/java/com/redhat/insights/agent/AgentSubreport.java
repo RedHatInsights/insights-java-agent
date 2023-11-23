@@ -30,7 +30,7 @@ public class AgentSubreport implements InsightsSubreport {
     activeGuesses.put("org.jboss.modules.Module", AgentSubreport::fingerprintJBoss);
     activeGuesses.put(
         "io.quarkus.bootstrap.runner.QuarkusEntryPoint", AgentSubreport::fingerprintQuarkus);
-    activeGuesses.put("org.apache.catalina.Server", __ -> "Tomcat / JWS");
+    activeGuesses.put("org.apache.catalina.Server", AgentSubreport::fingerprintTomcat);
   }
 
   private AgentSubreport(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
@@ -73,6 +73,15 @@ public class AgentSubreport implements InsightsSubreport {
     if (!workload.isEmpty()) {
       guessedWorkload = workload;
     }
+  }
+
+  static String fingerprintTomcat(Class<?> qClazz) {
+    try {
+      Class.forName("org.apache.tomcat.vault.VaultInteraction");
+    } catch (ClassNotFoundException __) {
+      return "Tomcat";
+    }
+    return "JWS";
   }
 
   static String fingerprintQuarkus(Class<?> qClazz) {

@@ -291,6 +291,16 @@
               <shadedClassifierName>shaded</shadedClassifierName>
               <relocations>
                 <relocation>
+                  <pattern>com.redhat.insights</pattern>
+                  <shadedPattern>${shade.prefix}</shadedPattern>
+                  <!--                  <includes>-->
+                  <!--                    <include>com.redhat.insights*</include>-->
+                  <!--                  </includes>-->
+                  <excludes>
+                    <exclude>com.redhat.insights.agent.*</exclude>
+                  </excludes>
+                </relocation>
+                <relocation>
                   <pattern>org.apache</pattern>
                   <shadedPattern>${shade.prefix}.org.apache</shadedPattern>
                 </relocation>
@@ -343,6 +353,7 @@
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
+                    <Premain-Class>com.redhat.insights.agent.AgentMain</Premain-Class>
                     <Agent-Class>com.redhat.insights.agent.AgentMain</Agent-Class>
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
