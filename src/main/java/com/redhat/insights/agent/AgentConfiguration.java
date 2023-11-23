@@ -86,12 +86,26 @@ public final class AgentConfiguration implements InsightsConfiguration {
     return false;
   }
 
+  @Override
+  public String toString() {
+    return "AgentConfiguration{" + "args=" + args + '}';
+  }
+
   public boolean isDebug() {
     return "true".equalsIgnoreCase(args.getOrDefault("debug", "false"));
   }
 
-  @Override
-  public String toString() {
-    return "AgentConfiguration{" + "args=" + args + '}';
+  public boolean isFileOnly() {
+    return "true".equalsIgnoreCase(args.getOrDefault("file_only", "false"));
+  }
+
+  // See https://issues.redhat.com/browse/MWTELE-93 for more information
+  public boolean isOCP() {
+    return "true".equalsIgnoreCase(args.getOrDefault("is_ocp", "false"));
+  }
+
+  // See https://issues.redhat.com/browse/MWTELE-93 for more information
+  public boolean shouldDefer() {
+    return "true".equalsIgnoreCase(args.getOrDefault("should_defer", "false"));
   }
 }

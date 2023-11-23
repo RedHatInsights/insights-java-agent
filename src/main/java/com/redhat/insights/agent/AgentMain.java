@@ -56,15 +56,6 @@ public final class AgentMain {
         logger.warning("Insights agent already loaded, skipping");
         return;
       }
-      //      try {
-      //        // We need to check for the existence of the client, not just the agent.
-      //        // This is belt-and-braces in case this agent is ever loaded into an
-      //        // app that has built-in Insights support.
-      //        Class.forName("com.redhat.insights.InsightsScheduler");
-      //        return;
-      //      } catch (ClassNotFoundException __) {
-      //        // Not loaded yet, continue
-      //      }
       loaded = true;
     }
 
@@ -76,17 +67,55 @@ public final class AgentMain {
     if (!oArgs.isPresent()) {
       return;
     }
-    AgentConfiguration args = oArgs.get();
+    AgentConfiguration config = oArgs.get();
+
+    if (!shouldContinue(logger, config)) {
+      return;
+    }
 
     BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
     try {
       logger.info("Starting Red Hat Insights client");
-      new AgentMain(logger, args, jarsToSend).start();
+      new AgentMain(logger, config, jarsToSend).start();
       ClassNoticer noticer = new ClassNoticer(logger, jarsToSend);
       instrumentation.addTransformer(noticer);
     } catch (Throwable t) {
       logger.error("Unable to start Red Hat Insights client", t);
     }
+  }
+
+  // Now we have the config, we need to check for the existence of the unshaded client, not just
+  // the agent.
+  // This is belt-and-braces in case this agent is ever loaded into an
+  // app that has built-in Insights support.
+
+  // See https://issues.redhat.com/browse/MWTELE-93 for more information
+  static boolean shouldContinue(InsightsLogger logger, AgentConfiguration config) {
+    try {
+      // This obfuscation is necessary to work around the shader plugin which will try to helpfully
+      // rename the class name when we don't want it to.
+      String obfuscatedStem = "com.redhat";
+      String obfuscatedSubPackageAndClass = ".insights.InsightsReportController";
+
+      Class.forName(obfuscatedStem + obfuscatedSubPackageAndClass);
+      if (config.isOCP()) {
+        if (config.shouldDefer()) {
+          logger.warning("Insights builtin support is available, deferring to that");
+          return false;
+        } else {
+          logger.warning(
+              "Starting Red Hat Insights client: Builtin support for OpenShift is available, but"
+                  + " the agent is configured to run anyway. Ensure that this configuration is correct.");
+        }
+      } else {
+        // Always defer if we're on RHEL
+        logger.warning("Insights builtin support is available, deferring to that");
+        return false;
+      }
+    } catch (ClassNotFoundException __) {
+      // Builtin support not found, continue
+    }
+    return true;
   }
 
   /**
@@ -117,18 +146,21 @@ public final class AgentMain {
     }
     logger.debug(config.toString());
 
-    if (!config.getMaybeAuthToken().isPresent()) {
+    if (shouldLookForCerts(config)) {
       Path certPath = Paths.get(config.getCertFilePath());
       Path keyPath = Paths.get(config.getKeyFilePath());
       if (!Files.exists(certPath) || !Files.exists(keyPath)) {
-        if (!out.containsKey("debug") || !"true".equals(out.get("debug"))) {
-          logger.error("Unable to start Red Hat Insights client: Missing certificate or key files");
-          return Optional.empty();
-        }
+        logger.error("Unable to start Red Hat Insights client: Missing certificate or key files");
+        return Optional.empty();
       }
     }
 
     return Optional.of(config);
+  }
+
+  private static boolean shouldLookForCerts(AgentConfiguration config) {
+    boolean hasToken = !config.getMaybeAuthToken().isPresent();
+    return !hasToken && !config.isDebug() && !config.isFileOnly();
   }
 
   private void start() {
@@ -136,7 +168,7 @@ public final class AgentMain {
     final PEMSupport pem = new PEMSupport(logger, configuration);
 
     Supplier<InsightsHttpClient> httpClientSupplier;
-    if (configuration.isDebug()) {
+    if (configuration.isDebug() || configuration.isFileOnly()) {
       httpClientSupplier = () -> new InsightsFileWritingClient(logger, configuration);
     } else {
       httpClientSupplier =
