@@ -34,14 +34,14 @@ public class ClassNoticerTest {
 
     InsightsLogger logger = new NoopInsightsLogger();
     BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
-    ClassNoticer noticer = new ClassNoticer(logger, jarsToSend);
+    ClassNoticer noticer = new ClassNoticer(jarsToSend);
     instrumentation.addTransformer(noticer);
 
     InsightsConfiguration mockConfig =
         MockInsightsConfiguration.of("test_app", false, Duration.ofDays(1), Duration.ofSeconds(5));
     InsightsHttpClient mockHttpClient = Mockito.mock(InsightsHttpClient.class);
     Mockito.when(mockHttpClient.isReadyToSend()).thenReturn(true);
-    InsightsReport report = AgentBasicReport.of(logger, mockConfig);
+    InsightsReport report = AgentBasicReport.of(mockConfig);
     InsightsScheduler scheduler = InsightsCustomScheduledExecutor.of(logger, mockConfig);
 
     InsightsReportController controller =

@@ -53,6 +53,7 @@
     <apache.httpclient.version>4.5.14</apache.httpclient.version>
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
     <apache.httpmime.version>4.5.14</apache.httpmime.version>
+    <org.slf4j.version>2.0.7</org.slf4j.version>
 
     <!-- Test libraries versions -->
     <junit.version>5.9.2</junit.version>
@@ -105,6 +106,21 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
         <version>${apache.httpmime.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${org.slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${org.slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${org.slf4j.version}</version>
       </dependency>
 
       <!--      Tools jar -->
@@ -180,6 +196,25 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <!-- TODO remove this SLF4J provider. We should just depend on what SLF4J provider is available in the attached
+        application's classpath at runtime, if any. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -331,12 +366,23 @@
                   <pattern>com.redhat.insights</pattern>
                   <shadedPattern>${shade.prefix}</shadedPattern>
                   <excludes>
-                    <exclude>com.redhat.insights.agent.*</exclude>
+                    <exclude>com.redhat.insights.agent.**</exclude>
                   </excludes>
                 </relocation>
                 <relocation>
                   <pattern>org.apache</pattern>
                   <shadedPattern>${shade.prefix}.org.apache</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.slf4j</pattern>
+                  <shadedPattern>${shade.prefix}.org.slf4j</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>java.util.logging.Logger</pattern>
+                  <shadedPattern>${shade.prefix}.ShadeLogger</shadedPattern>
+                  <excludes>
+                    <exclude>${shade.prefix}.ShadeLogger</exclude>
+                  </excludes>
                 </relocation>
                 <relocation>
                   <pattern>org.wildfly.common</pattern>

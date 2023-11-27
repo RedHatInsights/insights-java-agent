@@ -10,19 +10,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AgentBasicReport extends AbstractTopLevelReportBase {
+  private static final InsightsLogger logger = new SLF4JLogger(AgentBasicReport.class);
+
   private AgentBasicReport(
-      InsightsLogger logger,
-      InsightsConfiguration config,
-      Map<String, InsightsSubreport> subReports) {
+      InsightsConfiguration config, Map<String, InsightsSubreport> subReports) {
     super(logger, config, subReports);
   }
 
-  public static AgentBasicReport of(InsightsLogger logger, InsightsConfiguration configuration) {
+  public static AgentBasicReport of(InsightsConfiguration configuration) {
     Map<String, InsightsSubreport> reports = new HashMap<>();
     ClasspathJarInfoSubreport jarsReport = new ClasspathJarInfoSubreport(logger);
     reports.put("jars", jarsReport);
-    reports.put("details", AgentSubreport.of(logger, jarsReport));
-    return new AgentBasicReport(logger, configuration, reports);
+    reports.put("details", AgentSubreport.of(jarsReport));
+    return new AgentBasicReport(configuration, reports);
   }
 
   @Override
