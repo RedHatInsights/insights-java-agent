@@ -28,17 +28,14 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
 public final class InsightsAgentHttpClient implements InsightsHttpClient {
-  private final InsightsLogger logger;
+  private static final InsightsLogger logger = new SLF4JLogger(InsightsAgentHttpClient.class);
   private static final ContentType GENERAL_CONTENT_TYPE = ContentType.create(GENERAL_MIME_TYPE);
   private final Supplier<SSLContext> sslContextSupplier;
   private final InsightsConfiguration configuration;
   private final boolean useMTLS;
 
   public InsightsAgentHttpClient(
-      InsightsLogger logger,
-      InsightsConfiguration configuration,
-      Supplier<SSLContext> sslContextSupplier) {
-    this.logger = logger;
+      InsightsConfiguration configuration, Supplier<SSLContext> sslContextSupplier) {
     this.configuration = configuration;
     this.sslContextSupplier = sslContextSupplier;
     this.useMTLS = !configuration.getMaybeAuthToken().isPresent();

@@ -15,7 +15,8 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 public final class ClassNoticer implements ClassFileTransformer {
-  private final InsightsLogger logger;
+  private static final InsightsLogger logger = new SLF4JLogger(ClassNoticer.class);
+
   private final BlockingQueue<JarInfo> jarsToSend;
   private final JarAnalyzer analyzer;
 
@@ -24,8 +25,7 @@ public final class ClassNoticer implements ClassFileTransformer {
   private final Set<String> seenJarHashes = new HashSet<>();
   private final Set<String> seenUrls = new HashSet<>();
 
-  public ClassNoticer(InsightsLogger logger, BlockingQueue<JarInfo> jarsToSend) {
-    this.logger = logger;
+  public ClassNoticer(BlockingQueue<JarInfo> jarsToSend) {
     this.jarsToSend = jarsToSend;
     this.analyzer = new JarAnalyzer(logger, true);
   }

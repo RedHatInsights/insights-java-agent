@@ -15,10 +15,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class AgentSubreport implements InsightsSubreport {
+  private static final InsightsLogger logger = new SLF4JLogger(AgentSubreport.class);
+
   private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
   private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
-  private final InsightsLogger logger;
   private final ClasspathJarInfoSubreport jarsReport;
 
   private String guessedWorkload = "Unidentified";
@@ -33,13 +34,12 @@ public class AgentSubreport implements InsightsSubreport {
     activeGuesses.put("org.apache.catalina.Server", AgentSubreport::fingerprintTomcat);
   }
 
-  private AgentSubreport(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
-    this.logger = logger;
+  private AgentSubreport(ClasspathJarInfoSubreport jarsReport) {
     this.jarsReport = jarsReport;
   }
 
-  public static InsightsSubreport of(InsightsLogger logger, ClasspathJarInfoSubreport jarsReport) {
-    return new AgentSubreport(logger, jarsReport);
+  public static InsightsSubreport of(ClasspathJarInfoSubreport jarsReport) {
+    return new AgentSubreport(jarsReport);
   }
 
   @Override
