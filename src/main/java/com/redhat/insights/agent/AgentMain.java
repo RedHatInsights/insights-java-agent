@@ -159,7 +159,7 @@ public final class AgentMain {
   }
 
   private static boolean shouldLookForCerts(AgentConfiguration config) {
-    boolean hasToken = !config.getMaybeAuthToken().isPresent();
+    boolean hasToken = config.getMaybeAuthToken().isPresent();
     return !hasToken && !config.isDebug() && !config.isFileOnly();
   }
 
