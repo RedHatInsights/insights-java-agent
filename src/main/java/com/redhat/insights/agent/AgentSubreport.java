@@ -1,6 +1,8 @@
 /* Copyright (C) Red Hat 2023 */
 package com.redhat.insights.agent;
 
+import static java.lang.System.getProperty;
+
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.redhat.insights.jars.ClasspathJarInfoSubreport;
 import com.redhat.insights.jars.JarInfo;
@@ -8,10 +10,12 @@ import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsSubreport;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 
 public class AgentSubreport implements InsightsSubreport {
@@ -66,7 +70,7 @@ public class AgentSubreport implements InsightsSubreport {
         // FIXME Handle multiple matches "Possibly: X or Y"
         workload = guess.getValue().apply(clazz);
         break;
-      } catch (ClassNotFoundException __) {
+      } catch (ClassNotFoundException ex) {
         // not found - ignore
       }
     }
@@ -116,37 +120,21 @@ public class AgentSubreport implements InsightsSubreport {
       Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
       ClassLoader versionModuleClassLoader =
           getModuleClassLoader(moduleLoader, "org.jboss.as.version");
-      String home = System.getProperty("jboss.home.dir", null);
-      if (home != null) {
-        Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
-        Class<?> productConfigClass =
-            versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
-        Method fromFilesystemSlotMethod =
-            productConfigClass.getDeclaredMethod(
-                "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
-        Object productConfig =
-            fromFilesystemSlotMethod.invoke(
-                null, moduleLoaderClass.cast(moduleLoader), home, Collections.emptyMap());
-        //        this.productName =
-        //                (String)
-        //                        productConfigClass
-        //                                .getDeclaredMethod("getProductName", EMPTY_CLASS_ARRAY)
-        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
-        //        this.productVersion =
-        //                (String)
-        //                        productConfigClass
-        //                                .getDeclaredMethod("getProductVersion", EMPTY_CLASS_ARRAY)
-        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
-        //        this.isProduct =
-        //                (Boolean)
-        //                        productConfigClass
-        //                                .getDeclaredMethod("isProduct", EMPTY_CLASS_ARRAY)
-        //                                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
-        return (String)
-            productConfigClass
-                .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
-                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
-      }
+      String home = getJBossHome();
+      Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
+      Class<?> productConfigClass =
+          versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
+      Method fromFilesystemSlotMethod =
+          productConfigClass.getDeclaredMethod(
+              "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
+      Object productConfig =
+          fromFilesystemSlotMethod.invoke(
+              null, moduleLoaderClass.cast(moduleLoader), home, getPropertiesPrivileged());
+      return (String)
+          productConfigClass
+              .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
+              .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+
     } catch (NoSuchMethodException
         | SecurityException
         | ClassNotFoundException
@@ -156,6 +144,38 @@ public class AgentSubreport implements InsightsSubreport {
       // ignore
     }
     return "Unknown EAP / Wildfly - possibly misconfigured";
+  }
+
+  private static String getJBossHome() {
+    long timeout = System.currentTimeMillis() + 3000L;
+    String home = getPropertyPrivileged("jboss.home.dir", null);
+    while (home == null && System.currentTimeMillis() < timeout) {
+      try {
+        Thread.sleep(200);
+        home = getPropertyPrivileged("jboss.home.dir", null);
+      } catch (InterruptedException ex) {
+        return home;
+      }
+    }
+    return home;
+  }
+
+  private static String getPropertyPrivileged(final String property, final String defaultValue) {
+    if (System.getSecurityManager() != null) {
+      return AccessController.doPrivileged(
+          (PrivilegedAction<String>) () -> System.getProperty(property, defaultValue));
+    }
+
+    return getProperty(property, defaultValue);
+  }
+
+  private static Properties getPropertiesPrivileged() {
+    if (System.getSecurityManager() != null) {
+      return AccessController.doPrivileged(
+          (PrivilegedAction<Properties>) () -> System.getProperties());
+    }
+
+    return System.getProperties();
   }
 
   static Class<?> getJBossModuleLoaderClass(Class<?> subModuleLoaderClass) {
