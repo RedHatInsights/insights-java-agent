@@ -1,6 +1,7 @@
 /* Copyright (C) Red Hat 2023 */
 package com.redhat.insights.agent;
 
+import com.redhat.insights.InsightsException;
 import com.redhat.insights.InsightsReportController;
 import com.redhat.insights.http.InsightsFileWritingClient;
 import com.redhat.insights.http.InsightsHttpClient;
@@ -70,7 +71,7 @@ public final class AgentMain {
       return;
     }
 
-    BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
+    final BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
     try {
       logger.info("Starting Red Hat Insights client");
       new AgentMain(config, jarsToSend).start();
@@ -118,7 +119,6 @@ public final class AgentMain {
   /**
    * Parse the agent arguments from the form "key1=value1;key2=value2;..."
    *
-   * @param logger
    * @param agentArgs
    * @return
    */
@@ -162,17 +162,22 @@ public final class AgentMain {
 
   private void start() {
     final InsightsReport report = AgentBasicReport.of(configuration);
-    final PEMSupport pem = new PEMSupport(logger, configuration);
 
     Supplier<InsightsHttpClient> httpClientSupplier;
     if (configuration.isDebug() || configuration.isFileOnly()) {
       httpClientSupplier = () -> new InsightsFileWritingClient(logger, configuration);
     } else {
+      final PEMSupport pem = new PEMSupport(logger, configuration);
       httpClientSupplier =
           () -> new InsightsAgentHttpClient(configuration, () -> pem.createTLSContext());
     }
-    final InsightsReportController controller =
-        InsightsReportController.of(logger, configuration, report, httpClientSupplier, waitingJars);
-    controller.generate();
+    try {
+      final InsightsReportController controller =
+          InsightsReportController.of(
+              logger, configuration, report, httpClientSupplier, waitingJars);
+      controller.generate();
+    } catch (InsightsException e) {
+      logger.info("Unable to start Red Hat Insights client: " + e.getMessage());
+    }
   }
 }
