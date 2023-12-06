@@ -16,7 +16,7 @@ public class Attach {
       System.exit(1);
     }
     URL jarUrl = AgentMain.class.getProtectionDomain().getCodeSource().getLocation();
-    System.out.println("Trying to attach: " + jarUrl);
+    //    System.out.println("Trying to attach: " + jarUrl);
     String agentJar = jarUrl.toExternalForm().replaceFirst("^file:", "");
 
     String pid = args[0];
@@ -26,9 +26,9 @@ public class Attach {
       VirtualMachine vm = VirtualMachine.attach(pid);
       vm.loadAgent(agentJar, options);
       vm.detach();
-    } catch (IOException e) {
+    } catch (AgentLoadException | IOException e) {
       // Probable Java version mismatch, ignore
-    } catch (AgentLoadException | AttachNotSupportedException | AgentInitializationException e) {
+    } catch (AttachNotSupportedException | AgentInitializationException e) {
       throw new RuntimeException(e);
     }
   }
