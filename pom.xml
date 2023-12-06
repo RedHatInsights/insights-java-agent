@@ -402,6 +402,11 @@
                 <relocation>
                   <pattern>org.jboss</pattern>
                   <shadedPattern>${shade.prefix}.org.jboss</shadedPattern>
+                  <excludes>
+                    <exclude>org.jboss.modules.*</exclude>
+                    <exclude>org.jboss.as.version.*</exclude>
+                    <exclude>org.jboss.as.version.ProductConfig</exclude>
+                  </excludes>
                 </relocation>
                 <relocation>
                   <pattern>com.fasterxml.jackson</pattern>
