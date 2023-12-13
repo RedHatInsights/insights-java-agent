@@ -55,7 +55,7 @@ The available key-value pairs are:
 | `cert`       | `/etc/pki/consumer/cert.pem`            | Certificate path file                              |
 | `key`        | `/etc/pki/consumer/key.pem`             | Certificate key file                               |
 | `token`      | (empty)                                 | Authentication token for token-based auth, if used |
-| `base_url`   | `https://cert.console.stage.redhat.com` | Server endpoint URL                                |
+| `base_url`   | `https://cert.console.redhat.com`       | Server endpoint URL                                |
 | `uri`        | `/api/ingress/v1/upload`                | Request URI at the server endpoint                 |
 | `proxy`      | (empty)                                 | Proxy host, if any                                 |
 | `proxy_port` | (empty)                                 | Proxy port, if any                                 |
