@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.config.InsightsConfiguration;
@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class AgentConfiguration implements InsightsConfiguration {
+
+  static final String TRUE = "true";
+  static final String FALSE = "false";
 
   static final String AGENT_ARG_NAME = "name";
   static final String AGENT_ARG_CERT = "cert";
@@ -16,6 +19,11 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_PROXY = "proxy";
   static final String AGENT_ARG_PROXY_PORT = "proxy_port";
   static final String AGENT_ARG_OPT_OUT = "optOut";
+
+  static final String AGENT_ARG_DEBUG = "debug";
+  static final String AGENT_ARG_FILE_ONLY = "file_only";
+  static final String AGENT_ARG_IS_OCP = "is_ocp";
+  static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
 
   private final Map<String, String> args;
 
@@ -92,20 +100,20 @@ public final class AgentConfiguration implements InsightsConfiguration {
   }
 
   public boolean isDebug() {
-    return "true".equalsIgnoreCase(args.getOrDefault("debug", "false"));
+    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
   }
 
   public boolean isFileOnly() {
-    return "true".equalsIgnoreCase(args.getOrDefault("file_only", "false"));
+    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_FILE_ONLY, FALSE));
   }
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean isOCP() {
-    return "true".equalsIgnoreCase(args.getOrDefault("is_ocp", "false"));
+    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_IS_OCP, FALSE));
   }
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean shouldDefer() {
-    return "true".equalsIgnoreCase(args.getOrDefault("should_defer", "false"));
+    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_SHOULD_DEFER, FALSE));
   }
 }

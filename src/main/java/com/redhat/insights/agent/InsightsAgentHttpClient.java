@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import static com.redhat.insights.InsightsErrorCode.*;
@@ -86,7 +86,7 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
       if (useMTLS) {
         post = createPost();
       } else {
-        post = createAuthTokenPost(configuration.getMaybeAuthToken().get());
+        post = createAuthTokenPost();
       }
       post.setHeader("Cache-Control", "no-store");
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -136,14 +136,15 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
     }
   }
 
-  private HttpPost createAuthTokenPost(String token) {
+  HttpPost createAuthTokenPost() {
+    String token = configuration.getMaybeAuthToken().get();
     HttpPost post =
         new HttpPost(assembleURI(configuration.getUploadBaseURL(), configuration.getUploadUri()));
-    post.setHeader("Authorization", "Basic " + token);
+    post.setHeader("Authorization", "Bearer " + token);
     return post;
   }
 
-  private HttpPost createPost() {
+  HttpPost createPost() {
     return new HttpPost(
         assembleURI(configuration.getUploadBaseURL(), configuration.getUploadUri()));
   }

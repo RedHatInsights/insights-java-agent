@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.InsightsException;
@@ -58,7 +58,7 @@ public final class AgentMain {
     }
 
     if (agentArgs == null || "".equals(agentArgs)) {
-      logger.error("Unable to start Red Hat Insights client: Need config arguments");
+      logger.error("Unable to start Red Hat Insights agent: Need config arguments");
       return;
     }
     Optional<AgentConfiguration> oArgs = parseArgs(agentArgs);
@@ -68,12 +68,13 @@ public final class AgentMain {
     AgentConfiguration config = oArgs.get();
 
     if (!shouldContinue(config)) {
+      logger.info("Config indicates Red Hat Insights agent is not to be run. Stopping.");
       return;
     }
 
     final BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
     try {
-      logger.info("Starting Red Hat Insights client");
+      logger.info("Starting Red Hat Insights agent");
       new AgentMain(config, jarsToSend).start();
       ClassNoticer noticer = new ClassNoticer(jarsToSend);
       instrumentation.addTransformer(noticer);
@@ -128,7 +129,7 @@ public final class AgentMain {
       String[] kv = pair.split("=");
       if (kv.length != 2) {
         logger.error(
-            "Unable to start Red Hat Insights client: Malformed config arguments (should be"
+            "Unable to start Red Hat Insights agent: Malformed config arguments (should be"
                 + " key-value pairs)");
         return Optional.empty();
       }
@@ -138,7 +139,7 @@ public final class AgentMain {
 
     if (config.getIdentificationName() == null || "".equals(config.getIdentificationName())) {
       logger.error(
-          "Unable to start Red Hat Insights client: App requires a name for identification");
+          "Unable to start Red Hat Insights agent: App requires a name for identification");
       return Optional.empty();
     }
     logger.debug(config.toString());
@@ -147,7 +148,7 @@ public final class AgentMain {
       Path certPath = Paths.get(config.getCertFilePath());
       Path keyPath = Paths.get(config.getKeyFilePath());
       if (!Files.exists(certPath) || !Files.exists(keyPath)) {
-        logger.error("Unable to start Red Hat Insights client: Missing certificate or key files");
+        logger.error("Unable to start Red Hat Insights agent: Missing certificate or key files");
         return Optional.empty();
       }
     }
@@ -177,7 +178,7 @@ public final class AgentMain {
               logger, configuration, report, httpClientSupplier, waitingJars);
       controller.generate();
     } catch (InsightsException e) {
-      logger.info("Unable to start Red Hat Insights client: " + e.getMessage());
+      logger.info("Unable to start Red Hat Insights agent: " + e.getMessage());
     }
   }
 }
