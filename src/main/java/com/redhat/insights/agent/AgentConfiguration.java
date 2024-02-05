@@ -18,7 +18,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_UPLOAD_URI = "uri";
   static final String AGENT_ARG_PROXY = "proxy";
   static final String AGENT_ARG_PROXY_PORT = "proxy_port";
-  static final String AGENT_ARG_OPT_OUT = "optOut";
+  static final String AGENT_ARG_OPT_OUT = "opt_out";
 
   static final String AGENT_ARG_DEBUG = "debug";
   static final String AGENT_ARG_FILE_ONLY = "file_only";
