@@ -169,21 +169,26 @@ public final class AgentMain {
   private void start() {
     final InsightsReport report = AgentBasicReport.of(configuration);
 
-    Supplier<InsightsHttpClient> httpClientSupplier;
-    if (configuration.isDebug() || configuration.isFileOnly()) {
-      httpClientSupplier = () -> new InsightsFileWritingClient(logger, configuration);
-    } else {
-      final PEMSupport pem = new PEMSupport(logger, configuration);
-      httpClientSupplier =
-          () -> new InsightsAgentHttpClient(configuration, () -> pem.createTLSContext());
-    }
+    final Supplier<InsightsHttpClient> clientSupplier = getInsightsClientSupplier();
     try {
       final InsightsReportController controller =
-          InsightsReportController.of(
-              logger, configuration, report, httpClientSupplier, waitingJars);
+          InsightsReportController.of(logger, configuration, report, clientSupplier, waitingJars);
       controller.generate();
     } catch (InsightsException e) {
       logger.info("Unable to start Red Hat Insights agent: " + e.getMessage());
     }
+  }
+
+  private Supplier<InsightsHttpClient> getInsightsClientSupplier() {
+    final Supplier<InsightsHttpClient> out;
+    if (configuration.isDebug() || configuration.isFileOnly()) {
+      out = () -> new InsightsFileWritingClient(logger, configuration);
+    } else if (configuration.isOCP()) {
+      out = () -> new InsightsAgentHttpClient(configuration);
+    } else {
+      final PEMSupport pem = new PEMSupport(logger, configuration);
+      out = () -> new InsightsAgentHttpClient(configuration, pem::createTLSContext);
+    }
+    return out;
   }
 }
