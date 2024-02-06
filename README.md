@@ -50,7 +50,7 @@ The available key-value pairs are:
 
 | Name         | Default value                           | Description                                        |
 |--------------|-----------------------------------------|----------------------------------------------------|
-| `optOut`     | `false`                                 | Opt out of Red Hat Insights reporting when `true`  |
+| `opt_out`    | `false`                                 | Opt out of Red Hat Insights reporting when `true`  |
 | `name`       | N/A, must be defined                    | Identification name for reporting                  |
 | `cert`       | `/etc/pki/consumer/cert.pem`            | Certificate path file                              |
 | `key`        | `/etc/pki/consumer/key.pem`             | Certificate key file                               |

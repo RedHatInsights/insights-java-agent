@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.sun.tools.attach.AgentInitializationException;
@@ -26,9 +26,9 @@ public class Attach {
       VirtualMachine vm = VirtualMachine.attach(pid);
       vm.loadAgent(agentJar, options);
       vm.detach();
-    } catch (AgentLoadException | IOException e) {
+    } catch (AgentLoadException __) {
       // Probable Java version mismatch, ignore
-    } catch (AttachNotSupportedException | AgentInitializationException e) {
+    } catch (AttachNotSupportedException | IOException | AgentInitializationException e) {
       throw new RuntimeException(e);
     }
   }

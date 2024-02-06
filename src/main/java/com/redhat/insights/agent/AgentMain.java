@@ -68,7 +68,8 @@ public final class AgentMain {
     AgentConfiguration config = oArgs.get();
 
     if (!shouldContinue(config)) {
-      logger.info("Config indicates Red Hat Insights agent is not to be run. Stopping.");
+      logger.info(
+          "Config indicates Red Hat Insights agent is not to be run. Not starting agent capability.");
       return;
     }
 
@@ -90,6 +91,10 @@ public final class AgentMain {
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   static boolean shouldContinue(AgentConfiguration config) {
+    if (config.isOptingOut()) {
+      return false;
+    }
+
     try {
       // This obfuscation is necessary to work around the shader plugin which will try to helpfully
       // rename the class name when we don't want it to.
@@ -158,7 +163,7 @@ public final class AgentMain {
 
   private static boolean shouldLookForCerts(AgentConfiguration config) {
     boolean hasToken = config.getMaybeAuthToken().isPresent();
-    return !hasToken && !config.isDebug() && !config.isFileOnly();
+    return !hasToken && !config.isDebug() && !config.isFileOnly() && !config.isOptingOut();
   }
 
   private void start() {
