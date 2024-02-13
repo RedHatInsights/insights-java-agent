@@ -1,16 +1,21 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.logging.InsightsLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.redhat.insights.logging.JulLogger;
 
-public class SLF4JLogger implements InsightsLogger {
+public class AgentLogger implements InsightsLogger {
 
-  private final Logger delegate;
+  private InsightsLogger delegate;
 
-  public SLF4JLogger(Class<?> clazz) {
-    this.delegate = LoggerFactory.getLogger(clazz);
+  public AgentLogger(Class<?> clazz) {
+    this.delegate = new JulLogger(clazz.getName());
+  }
+
+  public void setDebugDelegate() {
+    JulLogger newDelegate = new JulLogger("AgentMain");
+    //    newDelegate.setDebug();
+    this.delegate = newDelegate;
   }
 
   @Override
@@ -40,11 +45,11 @@ public class SLF4JLogger implements InsightsLogger {
 
   @Override
   public void warning(String message) {
-    delegate.warn(message);
+    delegate.warning(message);
   }
 
   @Override
   public void warning(String message, Throwable err) {
-    delegate.warn(message, err);
+    delegate.warning(message, err);
   }
 }
