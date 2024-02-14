@@ -41,6 +41,16 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
     this.useMTLS = !configuration.getMaybeAuthToken().isPresent();
   }
 
+  public InsightsAgentHttpClient(InsightsConfiguration configuration) {
+    this.configuration = configuration;
+    this.sslContextSupplier =
+        () -> {
+          throw new InsightsException(
+              ERROR_SSL_CREATING_CONTEXT, "Could not create SSL context in Token Auth mode");
+        };
+    this.useMTLS = false;
+  }
+
   @Override
   public void decorate(InsightsReport report) {
     if (useMTLS) {
