@@ -14,7 +14,7 @@ public class AgentLogger implements InsightsLogger {
 
   public void setDebugDelegate() {
     JulLogger newDelegate = new JulLogger("AgentMain");
-    //    newDelegate.setDebug();
+    newDelegate.setDebug();
     this.delegate = newDelegate;
   }
 
