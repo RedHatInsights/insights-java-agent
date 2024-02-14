@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.config.InsightsConfiguration;
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AgentBasicReport extends AbstractTopLevelReportBase {
-  private static final InsightsLogger logger = new SLF4JLogger(AgentBasicReport.class);
+  private static final InsightsLogger logger = AgentLogger.getLogger();
 
   private AgentBasicReport(
       InsightsConfiguration config, Map<String, InsightsSubreport> subReports) {
