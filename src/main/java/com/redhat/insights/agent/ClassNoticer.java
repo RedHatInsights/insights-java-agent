@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.jars.JarAnalyzer;
@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 public final class ClassNoticer implements ClassFileTransformer {
-  private static final InsightsLogger logger = new SLF4JLogger(ClassNoticer.class);
+  private static final InsightsLogger logger = AgentLogger.getLogger();
 
   private final BlockingQueue<JarInfo> jarsToSend;
   private final JarAnalyzer analyzer;

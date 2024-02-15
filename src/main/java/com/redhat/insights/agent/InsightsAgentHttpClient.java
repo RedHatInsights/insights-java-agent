@@ -28,7 +28,7 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
 public final class InsightsAgentHttpClient implements InsightsHttpClient {
-  private static final InsightsLogger logger = new SLF4JLogger(InsightsAgentHttpClient.class);
+  private static final InsightsLogger logger = AgentLogger.getLogger();
   private static final ContentType GENERAL_CONTENT_TYPE = ContentType.create(GENERAL_MIME_TYPE);
   private final Supplier<SSLContext> sslContextSupplier;
   private final InsightsConfiguration configuration;

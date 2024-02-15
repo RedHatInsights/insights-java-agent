@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import static java.lang.System.getProperty;
@@ -19,7 +19,7 @@ import java.util.Properties;
 import java.util.function.Function;
 
 public class AgentSubreport implements InsightsSubreport {
-  private static final InsightsLogger logger = new SLF4JLogger(AgentSubreport.class);
+  private static final InsightsLogger logger = AgentLogger.getLogger();
 
   private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
   private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];

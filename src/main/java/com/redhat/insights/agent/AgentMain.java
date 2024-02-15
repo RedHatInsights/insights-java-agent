@@ -6,7 +6,6 @@ import com.redhat.insights.InsightsReportController;
 import com.redhat.insights.http.InsightsFileWritingClient;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
-import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsReport;
 import com.redhat.insights.tls.PEMSupport;
 import java.lang.instrument.Instrumentation;
@@ -22,7 +21,7 @@ import java.util.function.Supplier;
 
 /** Main class for the agent. */
 public final class AgentMain {
-  private static final InsightsLogger logger = new SLF4JLogger(AgentMain.class);
+  private static final AgentLogger logger = AgentLogger.getLogger();
 
   private final AgentConfiguration configuration;
   private final BlockingQueue<JarInfo> waitingJars;
@@ -71,6 +70,10 @@ public final class AgentMain {
       logger.info(
           "Config indicates Red Hat Insights agent is not to be run. Not starting agent capability.");
       return;
+    }
+    if (config.isDebug()) {
+      logger.setDebugDelegate();
+      logger.debug("Running in debug mode");
     }
 
     final BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
@@ -163,7 +166,7 @@ public final class AgentMain {
 
   private static boolean shouldLookForCerts(AgentConfiguration config) {
     boolean hasToken = config.getMaybeAuthToken().isPresent();
-    return !hasToken && !config.isDebug() && !config.isFileOnly() && !config.isOptingOut();
+    return !hasToken && !config.isFileOnly() && !config.isOptingOut();
   }
 
   private void start() {
@@ -181,7 +184,7 @@ public final class AgentMain {
 
   private Supplier<InsightsHttpClient> getInsightsClientSupplier() {
     final Supplier<InsightsHttpClient> out;
-    if (configuration.isDebug() || configuration.isFileOnly()) {
+    if (configuration.isFileOnly()) {
       out = () -> new InsightsFileWritingClient(logger, configuration);
     } else if (configuration.isOCP()) {
       out = () -> new InsightsAgentHttpClient(configuration);
