@@ -36,7 +36,7 @@ public class AgentSubreport implements InsightsSubreport {
     activeGuesses.put("org.jboss.modules.Module", AgentSubreport::fingerprintJBoss);
     activeGuesses.put(
         "io.quarkus.bootstrap.runner.QuarkusEntryPoint", AgentSubreport::fingerprintQuarkus);
-    activeGuesses.put("org.apache.catalina.Server", AgentSubreport::fingerprintTomcat);
+    activeGuesses.put("org.apache.catalina.startup.Bootstrap", AgentSubreport::fingerprintTomcat);
   }
 
   private AgentSubreport(ClasspathJarInfoSubreport jarsReport) {
@@ -80,10 +80,14 @@ public class AgentSubreport implements InsightsSubreport {
     }
   }
 
-  static String fingerprintTomcat(Class<?> qClazz) {
+  // We can't reflectively call org.apache.catalina.util.ServerInfo.getServerNumber() for more info
+  // as this class is not included in minimal installs of JWS
+  static String fingerprintTomcat(Class<?> __) {
+    // We recommend, but don't mandate, the use of Vault in JWS so we can't use it as a definitive
+    // fingerprint
     try {
       Class.forName("org.apache.tomcat.vault.VaultInteraction");
-    } catch (ClassNotFoundException __) {
+    } catch (ClassNotFoundException _x) {
       return "Tomcat";
     }
     return "JWS";
