@@ -8,8 +8,10 @@ import com.redhat.insights.jars.ClasspathJarInfoSubreport;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsSubreport;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.jar.JarInputStream;
 
 public class AgentSubreport implements InsightsSubreport {
   private static final InsightsLogger logger = AgentLogger.getLogger();
@@ -85,12 +88,29 @@ public class AgentSubreport implements InsightsSubreport {
   static String fingerprintTomcat(Class<?> __) {
     // We recommend, but don't mandate, the use of Vault in JWS so we can't use it as a definitive
     // fingerprint
+    System.out.println("fingerprintTomcat!");
     try {
-      Class.forName("org.apache.tomcat.vault.VaultInteraction");
-    } catch (ClassNotFoundException _x) {
+      Class cls = Class.forName("org.apache.catalina.startup.Bootstrap");
+      URL url = cls.getProtectionDomain().getCodeSource().getLocation();
+      System.out.println("url: " + url);
+      InputStream in = url.openStream();
+      JarInputStream jar = new JarInputStream(in);
+      System.out.println("url: " + url);
+      System.out.println("manifest: " + jar.getManifest());
+      System.out.println("manifest: " + jar.getManifest().getMainAttributes());
+      System.out.println("manifest: " + jar.getManifest().getMainAttributes().entrySet());
+      System.out.println(
+          "manifest: " + jar.getManifest().getMainAttributes().getValue("Implementation-Version"));
+      if (jar.getManifest().getMainAttributes().getValue("Implementation-Version").indexOf("redhat")
+          != -1) {
+        System.out.println("we have a JWS installation");
+        return "JWS";
+      }
+
+    } catch (Exception _x) {
       return "Tomcat";
     }
-    return "JWS";
+    return "Tomcat";
   }
 
   static String fingerprintQuarkus(Class<?> qClazz) {
