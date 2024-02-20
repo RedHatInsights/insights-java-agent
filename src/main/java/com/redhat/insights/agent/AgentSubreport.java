@@ -8,8 +8,11 @@ import com.redhat.insights.jars.ClasspathJarInfoSubreport;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsSubreport;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
@@ -17,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.jar.JarInputStream;
 
 public class AgentSubreport implements InsightsSubreport {
   private static final InsightsLogger logger = AgentLogger.getLogger();
@@ -82,15 +86,21 @@ public class AgentSubreport implements InsightsSubreport {
 
   // We can't reflectively call org.apache.catalina.util.ServerInfo.getServerNumber() for more info
   // as this class is not included in minimal installs of JWS
-  static String fingerprintTomcat(Class<?> __) {
-    // We recommend, but don't mandate, the use of Vault in JWS so we can't use it as a definitive
-    // fingerprint
-    try {
-      Class.forName("org.apache.tomcat.vault.VaultInteraction");
-    } catch (ClassNotFoundException _x) {
-      return "Tomcat";
+  static String fingerprintTomcat(Class<?> cls) {
+    URL url = cls.getProtectionDomain().getCodeSource().getLocation();
+    try (InputStream in = url.openStream();
+        JarInputStream jar = new JarInputStream(in)) {
+      if (jar.getManifest()
+          .getMainAttributes()
+          .getValue("Implementation-Version")
+          .contains("redhat")) {
+        return "JWS";
+      }
+    } catch (IOException __) {
+      // ignore
     }
-    return "JWS";
+
+    return "Tomcat";
   }
 
   static String fingerprintQuarkus(Class<?> qClazz) {
