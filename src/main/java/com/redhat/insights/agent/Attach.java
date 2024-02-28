@@ -21,6 +21,10 @@ public class Attach {
 
     String pid = args[0];
     String options = args[1];
+    if (options.length() > 100) {
+      System.err.println(
+          "WARNING: option string is long, attach may fail. Usual cause of this is a long token - consider using a token file instead");
+    }
 
     try {
       VirtualMachine vm = VirtualMachine.attach(pid);
