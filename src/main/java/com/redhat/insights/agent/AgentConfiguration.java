@@ -24,7 +24,6 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_PROXY = "proxy";
   static final String AGENT_ARG_PROXY_PORT = "proxy_port";
   static final String AGENT_ARG_OPT_OUT = "opt_out";
-
   static final String AGENT_ARG_DEBUG = "debug";
   static final String AGENT_ARG_FILE_ONLY = "file_only";
   static final String AGENT_ARG_IS_OCP = "is_ocp";
@@ -43,7 +42,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
     if (value != null) {
       return Optional.of(value);
     } else {
-      // Try getting it from a token file - this is really for testing purposes
+      // Try getting it from a token file - this is for dynamic attach (and testing)
       String path = args.get(AGENT_ARG_TOKEN_FILE);
       if (path != null) {
         try {
