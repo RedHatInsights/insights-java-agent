@@ -2,6 +2,10 @@
 package com.redhat.insights.agent;
 
 import com.redhat.insights.config.InsightsConfiguration;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,6 +18,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_CERT = "cert";
   static final String AGENT_ARG_KEY = "key";
   static final String AGENT_ARG_TOKEN = "token";
+  static final String AGENT_ARG_TOKEN_FILE = "token_file";
   static final String AGENT_ARG_BASE_URL = "base_url";
   static final String AGENT_ARG_UPLOAD_URI = "uri";
   static final String AGENT_ARG_PROXY = "proxy";
@@ -27,6 +32,8 @@ public final class AgentConfiguration implements InsightsConfiguration {
 
   private final Map<String, String> args;
 
+  private static final AgentLogger logger = AgentLogger.getLogger();
+
   public AgentConfiguration(Map<String, String> args) {
     this.args = args;
   }
@@ -35,6 +42,21 @@ public final class AgentConfiguration implements InsightsConfiguration {
     String value = args.get(AGENT_ARG_TOKEN);
     if (value != null) {
       return Optional.of(value);
+    } else {
+      // Try getting it from a token file - this is really for testing purposes
+      String path = args.get(AGENT_ARG_TOKEN_FILE);
+      if (path != null) {
+        try {
+          byte[] encoded = Files.readAllBytes(Paths.get(path));
+          value = new String(encoded, Charset.defaultCharset());
+          return Optional.of(value);
+        } catch (IOException e) {
+          logger.warning(
+              "Unable to read specified token file: "
+                  + path
+                  + " this is probably misconfiguration");
+        }
+      }
     }
     return Optional.empty();
   }
