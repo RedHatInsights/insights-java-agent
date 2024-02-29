@@ -33,6 +33,8 @@ public class AgentSubreport implements InsightsSubreport {
   static {
     activeGuesses.put("org.springframework.boot.SpringApplication", __ -> "Spring Boot");
     activeGuesses.put("org.springframework.boot.loader.Launcher", __ -> "Spring Boot");
+    // Since SB 3.2
+    activeGuesses.put("org.springframework.boot.loader.launch.Launcher", __ -> "Spring Boot");
     activeGuesses.put("org.jboss.modules.Module", AgentSubreport::fingerprintJBoss);
     activeGuesses.put(
         "io.quarkus.bootstrap.runner.QuarkusEntryPoint", AgentSubreport::fingerprintQuarkus);

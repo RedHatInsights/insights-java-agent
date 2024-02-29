@@ -10,6 +10,8 @@ import java.net.URL;
 
 /** Dynamic attachment class for use on apps that are already running. */
 public class Attach {
+  private static final int ATTACH_PARAM_SAFE_LIMIT = 250;
+
   public static void main(String[] args) {
     if (args.length < 2) {
       System.err.println("Need args: pid, options");
@@ -21,7 +23,7 @@ public class Attach {
 
     String pid = args[0];
     String options = args[1];
-    if (options.length() > 100) {
+    if (options.length() > ATTACH_PARAM_SAFE_LIMIT) {
       System.err.println(
           "WARNING: option string is long, attach may fail. Usual cause of this is a long token - consider using a token file instead");
     }
