@@ -23,15 +23,9 @@ public class AgentLogger implements InsightsLogger {
     return instance;
   }
 
-  static class DebugSimpleLogger extends SimpleLogger {
-    public DebugSimpleLogger() {
-      super("com.redhat.insights.agent.AgentLogger");
-      currentLogLevel = SimpleLogger.LOG_LEVEL_DEBUG;
-    }
-  }
-
   public void setDebugDelegate() {
-    this.delegate = new DebugSimpleLogger();
+    System.setProperty(SimpleLogger.LOG_KEY_PREFIX + "com.redhat.insights.agent", "debug");
+    this.delegate = LoggerFactory.getLogger("com.redhat.insights.agent.AgentLogger");
   }
 
   @Override
