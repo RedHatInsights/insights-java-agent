@@ -7,11 +7,7 @@ import com.redhat.insights.http.InsightsFileWritingClient;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.jars.JarInfo;
 import com.redhat.insights.reports.InsightsReport;
-import com.redhat.insights.tls.PEMSupport;
 import java.lang.instrument.Instrumentation;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +52,7 @@ public final class AgentMain {
       loaded = true;
     }
 
-    if (agentArgs == null || "".equals(agentArgs)) {
+    if (agentArgs == null || agentArgs.isEmpty()) {
       logger.error("Unable to start Red Hat Insights agent: Need config arguments");
       return;
     }
@@ -88,9 +84,10 @@ public final class AgentMain {
   }
 
   // Now we have the config, we need to check for the existence of the unshaded client, not just
-  // the agent.
-  // This is belt-and-braces in case this agent is ever loaded into an
+  // the agent. This is belt-and-braces in case this agent is ever loaded into an
   // app that has built-in Insights support.
+  //
+  // If we detect the unshaded client, we should defer to that. If we don't, we should continue.
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   static boolean shouldContinue(AgentConfiguration config) {
@@ -152,21 +149,7 @@ public final class AgentMain {
     }
     logger.debug(config.toString());
 
-    if (shouldLookForCerts(config)) {
-      Path certPath = Paths.get(config.getCertFilePath());
-      Path keyPath = Paths.get(config.getKeyFilePath());
-      if (!Files.exists(certPath) || !Files.exists(keyPath)) {
-        logger.error("Unable to start Red Hat Insights agent: Missing certificate or key files");
-        return Optional.empty();
-      }
-    }
-
     return Optional.of(config);
-  }
-
-  private static boolean shouldLookForCerts(AgentConfiguration config) {
-    boolean hasToken = config.getMaybeAuthToken().isPresent();
-    return !hasToken && !config.isFileOnly() && !config.isOptingOut();
   }
 
   private void start() {
@@ -182,16 +165,16 @@ public final class AgentMain {
     }
   }
 
+  /*
+   * There are only two possibilities - either we're running in OCP or we're not. If we are, we
+   * need an HTTP client that can talk through the proxy to the Insights service. If we're not, we
+   * are running on RHEL and need to put a report somewhere the RHEL Insights client can pick it up.
+   */
   private Supplier<InsightsHttpClient> getInsightsClientSupplier() {
-    final Supplier<InsightsHttpClient> out;
-    if (configuration.isFileOnly()) {
-      out = () -> new InsightsFileWritingClient(logger, configuration);
-    } else if (configuration.isOCP()) {
-      out = () -> new InsightsAgentHttpClient(configuration);
+    if (configuration.isOCP()) {
+      return () -> new InsightsAgentHttpClient(configuration);
     } else {
-      final PEMSupport pem = new PEMSupport(logger, configuration);
-      out = () -> new InsightsAgentHttpClient(configuration, pem::createTLSContext);
+      return () -> new InsightsFileWritingClient(logger, configuration);
     }
-    return out;
   }
 }

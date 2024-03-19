@@ -15,8 +15,6 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String FALSE = "false";
 
   static final String AGENT_ARG_NAME = "name";
-  static final String AGENT_ARG_CERT = "cert";
-  static final String AGENT_ARG_KEY = "key";
   static final String AGENT_ARG_TOKEN = "token";
   static final String AGENT_ARG_TOKEN_FILE = "token_file";
   static final String AGENT_ARG_BASE_URL = "base_url";
@@ -25,7 +23,6 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_PROXY_PORT = "proxy_port";
   static final String AGENT_ARG_OPT_OUT = "opt_out";
   static final String AGENT_ARG_DEBUG = "debug";
-  static final String AGENT_ARG_FILE_ONLY = "file_only";
   static final String AGENT_ARG_IS_OCP = "is_ocp";
   static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
 
@@ -65,20 +62,24 @@ public final class AgentConfiguration implements InsightsConfiguration {
     return args.get(AGENT_ARG_NAME);
   }
 
+  /**
+   * This is not used in the agent, so we return an empty string.
+   *
+   * @return
+   */
   @Override
   public String getCertFilePath() {
-    if (args.containsKey(AGENT_ARG_CERT)) {
-      return args.get(AGENT_ARG_CERT);
-    }
-    return InsightsConfiguration.DEFAULT_RHEL_CERT_FILE_PATH;
+    return "";
   }
 
+  /**
+   * This is not used in the agent, so we return an empty string.
+   *
+   * @return
+   */
   @Override
   public String getKeyFilePath() {
-    if (args.containsKey(AGENT_ARG_KEY)) {
-      return args.get(AGENT_ARG_KEY);
-    }
-    return InsightsConfiguration.DEFAULT_RHEL_KEY_FILE_PATH;
+    return "";
   }
 
   @Override
@@ -122,10 +123,6 @@ public final class AgentConfiguration implements InsightsConfiguration {
 
   public boolean isDebug() {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
-  }
-
-  public boolean isFileOnly() {
-    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_FILE_ONLY, FALSE));
   }
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
