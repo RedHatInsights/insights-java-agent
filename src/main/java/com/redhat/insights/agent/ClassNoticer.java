@@ -58,16 +58,10 @@ public final class ClassNoticer implements ClassFileTransformer {
     URL jarUrl = protectionDomain.getCodeSource().getLocation();
     String jarLoc = jarUrl.toString();
 
-    //    if ("jar".equals(jarUrl.getProtocol())) {
-    //      URL removeJar = null;
-    //      try {
-    //        removeJar = new URL(jarUrl.toString().replace("jar:", ""));
-    //      } catch (MalformedURLException e) {
-    //        // Bail early
-    //        return bytes;
-    //      }
-    //      jarLoc = removeJar.toString();
-    //    }
+    // Special-case WEB-INF/classes/ for upfront attach to .war files
+    if (jarLoc.endsWith("WEB-INF/classes!/")) {
+      return bytes;
+    }
 
     // If we haven't seen it before, add it to the set and enqueue it
     try {
@@ -87,7 +81,7 @@ public final class ClassNoticer implements ClassFileTransformer {
       }
     } catch (URISyntaxException e) {
       // Shouldn't be possible - so just log and carry on
-      logger.error("Jar with bad URI seen, should not be possible: " + jarUrl, e);
+      logger.info("Jar with unrecognized URI seen: " + jarUrl);
     }
 
     // Return unmodified bytes
