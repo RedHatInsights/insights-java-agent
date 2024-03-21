@@ -23,29 +23,32 @@ public final class AgentConfiguration implements InsightsConfiguration {
   static final String AGENT_ARG_PROXY_PORT = "proxy_port";
   static final String AGENT_ARG_OPT_OUT = "opt_out";
   static final String AGENT_ARG_DEBUG = "debug";
-  static final String AGENT_ARG_IS_OCP = "is_ocp";
   static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
 
   private final Map<String, String> args;
 
   private static final AgentLogger logger = AgentLogger.getLogger();
+  private String tokenValue = null;
 
   public AgentConfiguration(Map<String, String> args) {
     this.args = args;
   }
 
-  public Optional<String> getMaybeAuthToken() {
-    String value = args.get(AGENT_ARG_TOKEN);
-    if (value != null) {
-      return Optional.of(value);
+  public synchronized Optional<String> getMaybeAuthToken() {
+    if (tokenValue != null) {
+      return Optional.of(tokenValue);
     } else {
+      tokenValue = args.get(AGENT_ARG_TOKEN);
+      if (tokenValue != null) {
+        return Optional.of(tokenValue);
+      }
       // Try getting it from a token file - this is for dynamic attach (and testing)
       String path = args.get(AGENT_ARG_TOKEN_FILE);
       if (path != null) {
         try {
           byte[] encoded = Files.readAllBytes(Paths.get(path));
-          value = new String(encoded, Charset.defaultCharset());
-          return Optional.of(value);
+          tokenValue = new String(encoded, Charset.defaultCharset());
+          return Optional.of(tokenValue);
         } catch (IOException e) {
           logger.warning(
               "Unable to read specified token file: "
@@ -111,7 +114,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
   @Override
   public boolean isOptingOut() {
     if (args.containsKey(AGENT_ARG_OPT_OUT)) {
-      return "true".equalsIgnoreCase(args.get(AGENT_ARG_OPT_OUT));
+      return TRUE.equalsIgnoreCase(args.get(AGENT_ARG_OPT_OUT));
     }
     return false;
   }
@@ -125,9 +128,8 @@ public final class AgentConfiguration implements InsightsConfiguration {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
   }
 
-  // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean isOCP() {
-    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_IS_OCP, FALSE));
+    return getMaybeAuthToken().isPresent();
   }
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
