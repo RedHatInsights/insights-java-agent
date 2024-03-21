@@ -48,17 +48,16 @@ Note that the use of `;` means that on Unix, means that the javaagent argument w
 
 The available key-value pairs are:
 
-| Name         | Default value                           | Description                                        |
-|--------------|-----------------------------------------|----------------------------------------------------|
-| `opt_out`    | `false`                                 | Opt out of Red Hat Insights reporting when `true`  |
-| `name`       | N/A, must be defined                    | Identification name for reporting                  |
-| `cert`       | `/etc/pki/consumer/cert.pem`            | Certificate path file                              |
-| `key`        | `/etc/pki/consumer/key.pem`             | Certificate key file                               |
-| `token`      | (empty)                                 | Authentication token for token-based auth, if used |
-| `base_url`   | `https://cert.console.redhat.com`       | Server endpoint URL                                |
-| `uri`        | `/api/ingress/v1/upload`                | Request URI at the server endpoint                 |
-| `proxy`      | (empty)                                 | Proxy host, if any                                 |
-| `proxy_port` | (empty)                                 | Proxy port, if any                                 |
+| Name         | Default value                     | Description                                                        |
+|--------------|-----------------------------------|--------------------------------------------------------------------|
+| `opt_out`    | `false`                           | Opt out of Red Hat Insights reporting when `true`                  |
+| `name`       | N/A, must be defined              | Identification name for reporting                                  |
+| `token`      | (empty)                           | Authentication token for token-based auth, if used                 |
+| `token_file` | (empty)                           | File containing authentication token for token-based auth, if used |
+| `base_url`   | `https://cert.console.redhat.com` | Server endpoint URL, overridden for OpenShift                      |
+| `uri`        | `/api/ingress/v1/upload`          | Request URI at the server endpoint                                 |
+| `proxy`      | (empty)                           | Proxy host, if any                                                 |
+| `proxy_port` | (empty)                           | Proxy port, if any                                                 |
 
 ## Testing & coverage report
 
