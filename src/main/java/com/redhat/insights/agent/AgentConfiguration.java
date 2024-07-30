@@ -113,6 +113,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
 
   @Override
   public boolean isOptingOut() {
+    // FIXME Do we want to do a belt-and-braces check for Windows here?
     if (args.containsKey(AGENT_ARG_OPT_OUT)) {
       return TRUE.equalsIgnoreCase(args.get(AGENT_ARG_OPT_OUT));
     }
