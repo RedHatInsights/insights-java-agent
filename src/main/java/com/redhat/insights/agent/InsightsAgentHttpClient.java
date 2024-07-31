@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -24,6 +25,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
@@ -74,7 +76,16 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
   }
 
   void sendCompressedInsightsReport(String filename, byte[] bytes) {
-    HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+    HttpClientBuilder clientBuilder = HttpClients.custom();
+    // Do Timeouts first, as we set them in the default request config
+    int delay = (int) configuration.getHttpClientTimeout().toMillis();
+    RequestConfig requestConfig =
+        RequestConfig.custom()
+            .setConnectionRequestTimeout(delay)
+            .setConnectTimeout(delay)
+            .setSocketTimeout(delay)
+            .build();
+    clientBuilder.setDefaultRequestConfig(requestConfig);
     if (configuration.getProxyConfiguration().isPresent()) {
       InsightsConfiguration.ProxyConfiguration conf = configuration.getProxyConfiguration().get();
       clientBuilder.setRoutePlanner(
