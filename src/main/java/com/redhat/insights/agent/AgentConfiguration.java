@@ -1,7 +1,7 @@
 /* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
-import com.redhat.insights.config.InsightsConfiguration;
+import com.redhat.insights.config.EnvAndSysPropsInsightsConfiguration;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
-public final class AgentConfiguration implements InsightsConfiguration {
+public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguration {
 
   static final String TRUE = "true";
   static final String FALSE = "false";
@@ -57,12 +57,16 @@ public final class AgentConfiguration implements InsightsConfiguration {
         }
       }
     }
-    return Optional.empty();
+    return super.getMaybeAuthToken();
   }
 
   @Override
   public String getIdentificationName() {
-    return args.get(AGENT_ARG_NAME);
+    String out = args.get(AGENT_ARG_NAME);
+    if (out != null) {
+      return out;
+    }
+    return super.getIdentificationName();
   }
 
   /**
@@ -90,7 +94,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
     if (args.containsKey(AGENT_ARG_BASE_URL)) {
       return args.get(AGENT_ARG_BASE_URL);
     }
-    return InsightsConfiguration.DEFAULT_UPLOAD_BASE_URL;
+    return super.getUploadBaseURL();
   }
 
   @Override
@@ -98,7 +102,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
     if (args.containsKey(AGENT_ARG_UPLOAD_URI)) {
       return args.get(AGENT_ARG_UPLOAD_URI);
     }
-    return InsightsConfiguration.DEFAULT_UPLOAD_URI;
+    return super.getUploadUri();
   }
 
   @Override
@@ -108,7 +112,7 @@ public final class AgentConfiguration implements InsightsConfiguration {
           new ProxyConfiguration(
               args.get(AGENT_ARG_PROXY), Integer.parseUnsignedInt(args.get(AGENT_ARG_PROXY_PORT))));
     }
-    return Optional.empty();
+    return super.getProxyConfiguration();
   }
 
   @Override
@@ -116,13 +120,11 @@ public final class AgentConfiguration implements InsightsConfiguration {
     if (args.containsKey(AGENT_ARG_OPT_OUT)) {
       return TRUE.equalsIgnoreCase(args.get(AGENT_ARG_OPT_OUT));
     }
-    return false;
+    return super.isOptingOut();
   }
 
-  @Override
-  public String toString() {
-    return "AgentConfiguration{" + "args=" + args + '}';
-  }
+  ///////////////////////////////////////////////////////////////////////////
+  // Agent specific configuration
 
   public boolean isDebug() {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
@@ -135,5 +137,10 @@ public final class AgentConfiguration implements InsightsConfiguration {
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean shouldDefer() {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_SHOULD_DEFER, FALSE));
+  }
+
+  @Override
+  public String toString() {
+    return "AgentConfiguration{" + "args=" + args + '}';
   }
 }
