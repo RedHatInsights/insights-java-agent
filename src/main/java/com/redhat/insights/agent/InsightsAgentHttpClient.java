@@ -5,7 +5,6 @@ import static com.redhat.insights.InsightsErrorCode.*;
 
 import com.redhat.insights.InsightsException;
 import com.redhat.insights.config.InsightsConfiguration;
-import com.redhat.insights.http.BackoffWrapper;
 import com.redhat.insights.http.InsightsHttpClient;
 import com.redhat.insights.logging.InsightsLogger;
 import com.redhat.insights.reports.InsightsReport;
@@ -115,47 +114,37 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
       builder.addBinaryBody("file", bytes, GENERAL_CONTENT_TYPE, filename);
       builder.addTextBody("type", GENERAL_MIME_TYPE);
       post.setEntity(builder.build());
-
-      BackoffWrapper wrapper =
-          new BackoffWrapper(
-              logger,
-              configuration,
-              () -> {
-                try (CloseableHttpResponse response = client.execute(post)) {
-                  logger.debug(
-                      "Red Hat Insights HTTP Client: status="
-                          + response.getStatusLine()
-                          + ", body="
-                          + EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-                  switch (response.getStatusLine().getStatusCode()) {
-                    case 201:
-                      logger.debug(
-                          "Red Hat Insights - Advisor content type with no metadata accepted for"
-                              + " processing");
-                      break;
-                    case 202:
-                      logger.debug("Red Hat Insights - Payload was accepted for processing");
-                      break;
-                    case 401:
-                      throw new InsightsException(
-                          ERROR_HTTP_SEND_AUTH_ERROR, response.getStatusLine().getReasonPhrase());
-                    case 413:
-                      throw new InsightsException(
-                          ERROR_HTTP_SEND_PAYLOAD, response.getStatusLine().getReasonPhrase());
-                    case 415:
-                      throw new InsightsException(
-                          ERROR_HTTP_SEND_INVALID_CONTENT_TYPE,
-                          response.getStatusLine().getReasonPhrase());
-                    case 500:
-                    case 503:
-                    default:
-                      throw new InsightsException(
-                          ERROR_HTTP_SEND_SERVER_ERROR, response.getStatusLine().toString());
-                  }
-                }
-              });
-
-      wrapper.run();
+      try (CloseableHttpResponse response = client.execute(post)) {
+        logger.debug(
+            "Red Hat Insights HTTP Client: status="
+                + response.getStatusLine()
+                + ", body="
+                + EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
+        switch (response.getStatusLine().getStatusCode()) {
+          case 201:
+            logger.debug(
+                "Red Hat Insights - Advisor content type with no metadata accepted for"
+                    + " processing");
+            break;
+          case 202:
+            logger.debug("Red Hat Insights - Payload was accepted for processing");
+            break;
+          case 401:
+            throw new InsightsException(
+                ERROR_HTTP_SEND_AUTH_ERROR, response.getStatusLine().getReasonPhrase());
+          case 413:
+            throw new InsightsException(
+                ERROR_HTTP_SEND_PAYLOAD, response.getStatusLine().getReasonPhrase());
+          case 415:
+            throw new InsightsException(
+                ERROR_HTTP_SEND_INVALID_CONTENT_TYPE, response.getStatusLine().getReasonPhrase());
+          case 500:
+          case 503:
+          default:
+            throw new InsightsException(
+                ERROR_HTTP_SEND_SERVER_ERROR, response.getStatusLine().toString());
+        }
+      }
     } catch (IOException | ParseException ioex) {
       logger.debug("Error", ioex);
     }
