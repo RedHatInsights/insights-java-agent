@@ -32,9 +32,9 @@ public class Attach {
       VirtualMachine vm = VirtualMachine.attach(pid);
       vm.loadAgent(agentJar, options);
       vm.detach();
-    } catch (AgentLoadException __) {
-      // Probable Java version mismatch, ignore
-    } catch (AttachNotSupportedException | IOException | AgentInitializationException e) {
+    } catch (AgentLoadException | IOException __) {
+      // Probable Java version mismatch, ignore and exit cleanly
+    } catch (AttachNotSupportedException | AgentInitializationException e) {
       throw new RuntimeException(e);
     }
   }
