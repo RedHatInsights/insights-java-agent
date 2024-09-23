@@ -142,13 +142,8 @@ public class AgentSubreport implements InsightsSubreport {
               .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
               .invoke(productConfig, EMPTY_OBJECT_ARRAY);
 
-    } catch (NoSuchMethodException
-        | SecurityException
-        | ClassNotFoundException
-        | IllegalAccessException
-        | IllegalArgumentException
-        | InvocationTargetException ex) {
-      // ignore
+    } catch (Exception ex) {
+      logger.debug("Ignoring exception during JBoss probe", ex);
     }
     return "Unknown EAP / Wildfly - possibly misconfigured";
   }
