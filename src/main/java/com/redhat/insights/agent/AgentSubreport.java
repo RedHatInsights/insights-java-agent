@@ -19,6 +19,7 @@ import java.util.Properties;
 import java.util.function.Function;
 
 public class AgentSubreport implements InsightsSubreport {
+  private static final long POLL_PROPERTY_TIMEOUT_MS = 10000L;
   private static final InsightsLogger logger = AgentLogger.getLogger();
 
   private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -125,14 +126,14 @@ public class AgentSubreport implements InsightsSubreport {
       Method getBootModuleLoaderMethod =
           getModuleClass().getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
       // Wait until JBoss Modules initializes to avoid breaking their module loader
-      String modulePath = getJBossModulePath();
+      String modulePath = pollProperty("module.path");
       if (modulePath == null) {
         logger.debug("Module path did not become available");
       } else {
         Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
         ClassLoader versionModuleClassLoader =
             getModuleClassLoader(moduleLoader, "org.jboss.as.version");
-        String home = getJBossHome();
+        String home = pollProperty("jboss.home.dir");
         Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
         Class<?> productConfigClass =
             versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
@@ -153,16 +154,8 @@ public class AgentSubreport implements InsightsSubreport {
     return "Unknown EAP / Wildfly - possibly misconfigured";
   }
 
-  private static String getJBossHome() {
-    return pollProperty("jboss.home.dir");
-  }
-
-  private static String getJBossModulePath() {
-    return pollProperty("module.path");
-  }
-
   private static String pollProperty(String property) {
-    long timeout = System.currentTimeMillis() + 3000L;
+    long timeout = System.currentTimeMillis() + POLL_PROPERTY_TIMEOUT_MS;
     String value = getPropertyPrivileged(property, null);
     while (value == null && System.currentTimeMillis() < timeout) {
       try {
