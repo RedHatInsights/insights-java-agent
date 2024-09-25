@@ -124,24 +124,29 @@ public class AgentSubreport implements InsightsSubreport {
     try {
       Method getBootModuleLoaderMethod =
           getModuleClass().getDeclaredMethod("getBootModuleLoader", EMPTY_CLASS_ARRAY);
-      Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
-      ClassLoader versionModuleClassLoader =
-          getModuleClassLoader(moduleLoader, "org.jboss.as.version");
-      String home = getJBossHome();
-      Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
-      Class<?> productConfigClass =
-          versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
-      Method fromFilesystemSlotMethod =
-          productConfigClass.getDeclaredMethod(
-              "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
-      Object productConfig =
-          fromFilesystemSlotMethod.invoke(
-              null, moduleLoaderClass.cast(moduleLoader), home, getPropertiesPrivileged());
-      return (String)
-          productConfigClass
-              .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
-              .invoke(productConfig, EMPTY_OBJECT_ARRAY);
-
+      // Wait until JBoss Modules initializes to avoid breaking their module loader
+      String modulePath = getJBossModulePath();
+      if (modulePath == null) {
+        logger.debug("Module path did not become available");
+      } else {
+        Object moduleLoader = getBootModuleLoaderMethod.invoke(null, EMPTY_OBJECT_ARRAY);
+        ClassLoader versionModuleClassLoader =
+            getModuleClassLoader(moduleLoader, "org.jboss.as.version");
+        String home = getJBossHome();
+        Class<?> moduleLoaderClass = getJBossModuleLoaderClass(moduleLoader.getClass());
+        Class<?> productConfigClass =
+            versionModuleClassLoader.loadClass("org.jboss.as.version.ProductConfig");
+        Method fromFilesystemSlotMethod =
+            productConfigClass.getDeclaredMethod(
+                "fromFilesystemSlot", moduleLoaderClass, String.class, Map.class);
+        Object productConfig =
+            fromFilesystemSlotMethod.invoke(
+                null, moduleLoaderClass.cast(moduleLoader), home, getPropertiesPrivileged());
+        return (String)
+            productConfigClass
+                .getDeclaredMethod("getPrettyVersionString", EMPTY_CLASS_ARRAY)
+                .invoke(productConfig, EMPTY_OBJECT_ARRAY);
+      }
     } catch (Exception ex) {
       logger.debug("Ignoring exception during JBoss probe", ex);
     }
@@ -149,17 +154,25 @@ public class AgentSubreport implements InsightsSubreport {
   }
 
   private static String getJBossHome() {
+    return pollProperty("jboss.home.dir");
+  }
+
+  private static String getJBossModulePath() {
+    return pollProperty("module.path");
+  }
+
+  private static String pollProperty(String property) {
     long timeout = System.currentTimeMillis() + 3000L;
-    String home = getPropertyPrivileged("jboss.home.dir", null);
-    while (home == null && System.currentTimeMillis() < timeout) {
+    String value = getPropertyPrivileged(property, null);
+    while (value == null && System.currentTimeMillis() < timeout) {
       try {
         Thread.sleep(200);
-        home = getPropertyPrivileged("jboss.home.dir", null);
+        value = getPropertyPrivileged(property, null);
       } catch (InterruptedException ex) {
-        return home;
+        return value;
       }
     }
-    return home;
+    return value;
   }
 
   private static String getPropertyPrivileged(final String property, final String defaultValue) {
