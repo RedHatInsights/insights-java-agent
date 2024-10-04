@@ -24,7 +24,10 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   static final String AGENT_ARG_OPT_OUT = "opt_out";
   static final String AGENT_ARG_DEBUG = "debug";
   static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
+  static final String AGENT_ARG_POD_NAME = "pod_name";
+  static final String AGENT_ARG_POD_NAMESPACE = "pod_namespace";
 
+  static final String PROPERTY_NOT_GIVEN_DEFAULT = "[NONE]";
   private final Map<String, String> args;
 
   private static final AgentLogger logger = AgentLogger.getLogger();
@@ -130,10 +133,6 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
   }
 
-  public boolean isOCP() {
-    return getMaybeAuthToken().isPresent();
-  }
-
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean shouldDefer() {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_SHOULD_DEFER, FALSE));
@@ -142,5 +141,18 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   @Override
   public String toString() {
     return "AgentConfiguration{" + "args=" + args + '}';
+  }
+
+  // Openshift specific report properties
+  public boolean isOCP() {
+    return getMaybeAuthToken().isPresent();
+  }
+
+  public String getPodNamespace() {
+    return args.getOrDefault(AGENT_ARG_POD_NAMESPACE, PROPERTY_NOT_GIVEN_DEFAULT);
+  }
+
+  public String getPodName() {
+    return args.getOrDefault(AGENT_ARG_POD_NAME, PROPERTY_NOT_GIVEN_DEFAULT);
   }
 }
