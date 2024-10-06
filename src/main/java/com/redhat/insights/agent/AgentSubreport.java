@@ -26,6 +26,7 @@ public class AgentSubreport implements InsightsSubreport {
   private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
   private final ClasspathJarInfoSubreport jarsReport;
+  private final AgentConfiguration agentConfig;
 
   private String guessedWorkload = "Unidentified";
 
@@ -42,12 +43,14 @@ public class AgentSubreport implements InsightsSubreport {
     activeGuesses.put("org.apache.catalina.startup.Bootstrap", AgentSubreport::fingerprintTomcat);
   }
 
-  private AgentSubreport(ClasspathJarInfoSubreport jarsReport) {
+  private AgentSubreport(ClasspathJarInfoSubreport jarsReport, AgentConfiguration agentConfig) {
     this.jarsReport = jarsReport;
+    this.agentConfig = agentConfig;
   }
 
-  public static InsightsSubreport of(ClasspathJarInfoSubreport jarsReport) {
-    return new AgentSubreport(jarsReport);
+  public static InsightsSubreport of(
+      ClasspathJarInfoSubreport jarsReport, AgentConfiguration agentConfig) {
+    return new AgentSubreport(jarsReport, agentConfig);
   }
 
   @Override
@@ -199,7 +202,7 @@ public class AgentSubreport implements InsightsSubreport {
 
   @Override
   public String getVersion() {
-    return "1.0.0";
+    return "1.0.1";
   }
 
   @Override
@@ -209,5 +212,17 @@ public class AgentSubreport implements InsightsSubreport {
 
   public String getGuessedWorkload() {
     return guessedWorkload;
+  }
+
+  public String isOCP() {
+    return String.valueOf(agentConfig.isOCP());
+  }
+
+  public String getPodName() {
+    return agentConfig.getPodName();
+  }
+
+  public String getPodNamespace() {
+    return agentConfig.getPodNamespace();
   }
 }

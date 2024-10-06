@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023 */
+/* Copyright (C) Red Hat 2023-2024 */
 package com.redhat.insights.agent;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -18,6 +18,9 @@ public class AgentSubreportSerializer extends JsonSerializer<InsightsSubreport> 
     generator.writeStartObject();
     generator.writeStringField("version", subreport.getVersion());
     generator.writeStringField("workloadType", subreport.getGuessedWorkload());
+    generator.writeStringField("is_ocp", subreport.isOCP());
+    generator.writeStringField("pod_name", subreport.getPodName());
+    generator.writeStringField("pod_namespace", subreport.getPodNamespace());
     generator.writeEndObject();
     generator.flush();
   }

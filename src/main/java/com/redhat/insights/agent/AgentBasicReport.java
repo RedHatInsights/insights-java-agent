@@ -17,11 +17,11 @@ public class AgentBasicReport extends AbstractTopLevelReportBase {
     super(logger, config, subReports);
   }
 
-  public static AgentBasicReport of(InsightsConfiguration configuration) {
+  public static AgentBasicReport of(AgentConfiguration configuration) {
     Map<String, InsightsSubreport> reports = new HashMap<>();
     ClasspathJarInfoSubreport jarsReport = new ClasspathJarInfoSubreport(logger);
     reports.put("jars", jarsReport);
-    reports.put("details", AgentSubreport.of(jarsReport));
+    reports.put("details", AgentSubreport.of(jarsReport, configuration));
     return new AgentBasicReport(configuration, reports);
   }
 
