@@ -16,6 +16,8 @@ import com.redhat.insights.reports.InsightsReport;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.jar.JarFile;
@@ -43,11 +45,15 @@ public class ClassNoticerTest {
     ClassNoticer noticer = new ClassNoticer(jarsToSend);
     instrumentation.addTransformer(noticer);
 
+    Map<String, String> configArgs = new HashMap<String, String>();
+    configArgs.put("name", "test_app");
+    AgentConfiguration agentConfig = new AgentConfiguration(configArgs);
+
     InsightsConfiguration mockConfig =
         MockInsightsConfiguration.of("test_app", false, Duration.ofDays(1), Duration.ofSeconds(5));
     InsightsHttpClient mockHttpClient = Mockito.mock(InsightsHttpClient.class);
     Mockito.when(mockHttpClient.isReadyToSend()).thenReturn(true);
-    InsightsReport report = AgentBasicReport.of(mockConfig);
+    InsightsReport report = AgentBasicReport.of(agentConfig);
     InsightsScheduler scheduler = InsightsCustomScheduledExecutor.of(logger, mockConfig);
 
     InsightsReportController controller =
