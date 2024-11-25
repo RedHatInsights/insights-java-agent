@@ -16,7 +16,7 @@ public class AgentBasicReportTest {
   @Test
   void testOpenshiftParamsMissing() throws JsonProcessingException {
     Optional<AgentConfiguration> oConfig = parseArgs("name=foo");
-    final InsightsReport report = AgentBasicReport.of(oConfig.get());
+    final InsightsReport report = AgentBasicReport.of(oConfig.get(), null);
 
     ObjectMapper oMapper = new ObjectMapper();
     Map<String, Object> r =
@@ -33,7 +33,7 @@ public class AgentBasicReportTest {
   void testOpenshiftParams() throws JsonProcessingException {
     Optional<AgentConfiguration> oConfig =
         parseArgs("name=foo;token=bar;pod_name=XXX;pod_namespace=YYY");
-    final InsightsReport report = AgentBasicReport.of(oConfig.get());
+    final InsightsReport report = AgentBasicReport.of(oConfig.get(), null);
 
     ObjectMapper oMapper = new ObjectMapper();
     Map<String, Object> r =

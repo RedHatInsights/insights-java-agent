@@ -21,12 +21,17 @@ public final class AgentMain {
 
   private final AgentConfiguration configuration;
   private final BlockingQueue<JarInfo> waitingJars;
+  private final Instrumentation instrumentation;
 
   private static boolean loaded = false;
 
-  private AgentMain(AgentConfiguration configuration, BlockingQueue<JarInfo> jarsToSend) {
+  private AgentMain(
+      AgentConfiguration configuration,
+      BlockingQueue<JarInfo> jarsToSend,
+      Instrumentation instrumentation) {
     this.configuration = configuration;
     this.waitingJars = jarsToSend;
+    this.instrumentation = instrumentation;
   }
 
   public static void premain(String agentArgs, Instrumentation instrumentation) {
@@ -75,7 +80,7 @@ public final class AgentMain {
     final BlockingQueue<JarInfo> jarsToSend = new LinkedBlockingQueue<>();
     try {
       logger.info("Starting Red Hat Insights agent");
-      new AgentMain(config, jarsToSend).start();
+      new AgentMain(config, jarsToSend, instrumentation).start();
       ClassNoticer noticer = new ClassNoticer(jarsToSend);
       instrumentation.addTransformer(noticer);
     } catch (Throwable t) {
@@ -153,7 +158,7 @@ public final class AgentMain {
   }
 
   private void start() {
-    final InsightsReport report = AgentBasicReport.of(configuration);
+    final InsightsReport report = AgentBasicReport.of(configuration, instrumentation);
 
     final Supplier<InsightsHttpClient> clientSupplier = getInsightsClientSupplier();
     try {

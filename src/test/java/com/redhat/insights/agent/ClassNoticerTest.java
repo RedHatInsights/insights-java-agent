@@ -53,7 +53,7 @@ public class ClassNoticerTest {
         MockInsightsConfiguration.of("test_app", false, Duration.ofDays(1), Duration.ofSeconds(5));
     InsightsHttpClient mockHttpClient = Mockito.mock(InsightsHttpClient.class);
     Mockito.when(mockHttpClient.isReadyToSend()).thenReturn(true);
-    InsightsReport report = AgentBasicReport.of(agentConfig);
+    InsightsReport report = AgentBasicReport.of(agentConfig, instrumentation);
     InsightsScheduler scheduler = InsightsCustomScheduledExecutor.of(logger, mockConfig);
 
     InsightsReportController controller =
