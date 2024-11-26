@@ -1,0 +1,1024 @@
+{
+  "version" : "1.0.1",
+  "basic" : {
+    "app.user.dir" : "/Users/beevans/projects/insights/insights-java-agent",
+    "java.specification.version" : "1.8",
+    "java.runtime.version" : "1.8.0_382-b05",
+    "java.class.path" : "/Users/beevans/.m2/repository/org/junit/platform/junit-platform-launcher/1.9.2/junit-platform-launcher-1.9.2.jar:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit5-rt.jar:/Applications/IntelliJ IDEA.app/Contents/plugins/junit/lib/junit-rt.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/jre/lib/rt.jar:/Users/beevans/projects/insights/insights-java-agent/target/test-classes:/Users/beevans/projects/insights/insights-java-agent/target/classes:/Users/beevans/.m2/repository/com/redhat/insights/runtimes-java-api/2.0.3/runtimes-java-api-2.0.3.jar:/Users/beevans/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.jar:/Users/beevans/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.jar:/Users/beevans/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.17.2/jackson-datatype-jsr310-2.17.2.jar:/Users/beevans/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.jar:/Users/beevans/.m2/repository/org/wildfly/security/wildfly-elytron-x500-cert/2.4.2.Final/wildfly-elytron-x500-cert-2.4.2.Final.jar:/Users/beevans/.m2/repository/org/wildfly/security/wildfly-elytron-asn1/2.4.2.Final/wildfly-elytron-asn1-2.4.2.Final.jar:/Users/beevans/.m2/repository/org/jboss/logging/jboss-logging/3.5.3.Final/jboss-logging-3.5.3.Final.jar:/Users/beevans/.m2/repository/org/wildfly/security/wildfly-elytron-x500/2.4.2.Final/wildfly-elytron-x500-2.4.2.Final.jar:/Users/beevans/.m2/repository/org/wildfly/security/wildfly-elytron-x500-cert-util/2.4.2.Final/wildfly-elytron-x500-cert-util-2.4.2.Final.jar:/Users/beevans/.m2/repository/org/wildfly/common/wildfly-common/1.6.0.Final/wildfly-common-1.6.0.Final.jar:/Users/beevans/.m2/repository/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar:/Users/beevans/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/beevans/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/beevans/.m2/repository/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar:/Users/beevans/.m2/repository/org/apache/httpcomponents/httpmime/4.5.14/httpmime-4.5.14.jar:/Users/beevans/.m2/repository/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar:/Users/beevans/.m2/repository/org/slf4j/slf4j-simple/2.0.7/slf4j-simple-2.0.7.jar:/Users/beevans/.m2/repository/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar:/Users/beevans/.m2/repository/com/github/package-url/packageurl-java/1.4.1/packageurl-java-1.4.1.jar:/Users/beevans/.m2/repository/org/apache/maven/maven-model/3.9.0/maven-model-3.9.0.jar:/Users/beevans/.m2/repository/org/codehaus/plexus/plexus-utils/3.4.2/plexus-utils-3.4.2.jar:/Users/beevans/.m2/repository/org/cyclonedx/cyclonedx-core-java/7.3.1/cyclonedx-core-java-7.3.1.jar:/Users/beevans/.m2/repository/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar:/Users/beevans/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar:/Users/beevans/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/2.14.1/jackson-dataformat-xml-2.14.1.jar:/Users/beevans/.m2/repository/org/codehaus/woodstox/stax2-api/4.2.1/stax2-api-4.2.1.jar:/Users/beevans/.m2/repository/com/fasterxml/woodstox/woodstox-core/6.4.0/woodstox-core-6.4.0.jar:/Users/beevans/.m2/repository/com/networknt/json-schema-validator/1.0.76/json-schema-validator-1.0.76.jar:/Users/beevans/.m2/repository/com/ethlo/time/itu/1.7.0/itu-1.7.0.jar:/Library/Java/JavaVirtualMachines/java8/Contents/Home/lib/tools.jar:/Users/beevans/.m2/repository/org/junit/jupiter/junit-jupiter/5.9.2/junit-jupiter-5.9.2.jar:/Users/beevans/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.9.2/junit-jupiter-api-5.9.2.jar:/Users/beevans/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar:/Users/beevans/.m2/repository/org/junit/platform/junit-platform-commons/1.9.2/junit-platform-commons-1.9.2.jar:/Users/beevans/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/beevans/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.9.2/junit-jupiter-params-5.9.2.jar:/Users/beevans/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.9.2/junit-jupiter-engine-5.9.2.jar:/Users/beevans/.m2/repository/org/junit/platform/junit-platform-engine/1.9.2/junit-platform-engine-1.9.2.jar:/Users/beevans/.m2/repository/org/mockito/mockito-core/4.11.0/mockito-core-4.11.0.jar:/Users/beevans/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:/Users/beevans/.m2/repository/org/mockito/mockito-junit-jupiter/4.11.0/mockito-junit-jupiter-4.11.0.jar:/Users/beevans/.m2/repository/org/awaitility/awaitility/4.2.0/awaitility-4.2.0.jar:/Users/beevans/.m2/repository/org/hamcrest/hamcrest/2.1/hamcrest-2.1.jar:/Users/beevans/.m2/repository/net/bytebuddy/byte-buddy/1.14.0/byte-buddy-1.14.0.jar:/Users/beevans/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.0/byte-buddy-agent-1.14.0.jar:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar",
+    "system.os.name" : "Mac OS X",
+    "java.vm.vendor" : "Temurin",
+    "jvm.packages" : "[package com.intellij.rt.execution.application, package sun.reflect.annotation, Java Platform API Specification, version 1.8, package sun.jvmstat.monitor.remote, package org.junit.platform.commons.support, junit-platform-commons, version 1.9.2, package java.nio, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.support, junit-jupiter-engine, version 5.9.2, package java.security.cert, Java Platform API Specification, version 1.8, package java.util.zip, Java Platform API Specification, version 1.8, package com.intellij.rt.execution.junit, package java.nio.file, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.descriptor, junit-jupiter-engine, version 5.9.2, package org.cyclonedx.model, package com.redhat.insights.http, runtimes-java-api, version 2.0, package java.lang.instrument, Java Platform API Specification, version 1.8, package java.time, Java Platform API Specification, version 1.8, package java.lang.ref, Java Platform API Specification, version 1.8, package java.util.regex, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.execution, junit-jupiter-engine, version 5.9.2, package org.slf4j.spi, package sun.invoke.util, Java Platform API Specification, version 1.8, package com.intellij.rt.junit, package org.junit.platform.commons.function, junit-platform-commons, version 1.9.2, package sun.net.www.protocol.file, Java Platform API Specification, version 1.8, package com.redhat.insights.agent.tpa, package java.lang.reflect, Java Platform API Specification, version 1.8, package java.security, Java Platform API Specification, version 1.8, package com.redhat.insights.jars, runtimes-java-api, version 2.0, package com.sun.tools.attach, package org.slf4j.simple, package sun.net.sdp, Java Platform API Specification, version 1.8, package sun.net.spi.nameservice, Java Platform API Specification, version 1.8, package sun.reflect.generics.factory, Java Platform API Specification, version 1.8, package java.lang, Java Platform API Specification, version 1.8, package sun.invoke.empty, Java Platform API Specification, version 1.8, package sun.security.jca, Java Platform API Specification, version 1.8, package java.util.logging, Java Platform API Specification, version 1.8, package java.util, Java Platform API Specification, version 1.8, package org.junit.platform.commons.util, junit-platform-commons, version 1.9.2, package sun.util.resources, Java Platform API Specification, version 1.8, package java.util.stream, Java Platform API Specification, version 1.8, package sun.jvmstat.perfdata.monitor, package java.lang.annotation, Java Platform API Specification, version 1.8, package org.junit.platform.launcher.listeners.discovery, junit-platform-launcher, version 1.9.2, package org.junit.jupiter.engine.config, junit-jupiter-engine, version 5.9.2, package sun.nio, Java Platform API Specification, version 1.8, package org.junit.platform.launcher.listeners.session, junit-platform-launcher, version 1.9.2, package java.time.temporal, Java Platform API Specification, version 1.8, package java.nio.channels, Java Platform API Specification, version 1.8, package com.fasterxml.jackson.databind.module, jackson-databind, version 2.17.2, package sun.launcher, Java Platform API Specification, version 1.8, package sun.security.action, Java Platform API Specification, version 1.8, package java.nio.charset, Java Platform API Specification, version 1.8, package com.redhat.insights.logging, runtimes-java-api, version 2.0, package jdk.jfr.internal, Java Platform API Specification, version 1.8, package org.slf4j.event, package org.junit.platform.engine.support.hierarchical, junit-platform-engine, version 1.9.2, package sun.reflect.generics.repository, Java Platform API Specification, version 1.8, package sun.jvmstat.perfdata.monitor.protocol.local, package sun.net.util, Java Platform API Specification, version 1.8, package org.junit.platform.commons.annotation, junit-platform-commons, version 1.9.2, package net.bytebuddy.agent, package sun.reflect.generics.visitor, Java Platform API Specification, version 1.8, package sun.util.calendar, Java Platform API Specification, version 1.8, package com.intellij.junit5, package com.redhat.insights.agent, package org.junit.jupiter.engine, junit-jupiter-engine, version 5.9.2, package com.fasterxml.jackson.core.type, Jackson-core, version 2.17.2, package java.text, Java Platform API Specification, version 1.8, package com.sun.management, Java Platform API Specification, version 1.8, package sun.reflect.misc, Java Platform API Specification, version 1.8, package org.junit.jupiter.api, junit-jupiter-api, version 5.9.2, package sun.nio.ch, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.extension, junit-jupiter-engine, version 5.9.2, package sun.nio.cs, Java Platform API Specification, version 1.8, package java.nio.charset.spi, Java Platform API Specification, version 1.8, package java.text.spi, Java Platform API Specification, version 1.8, package java.util.spi, Java Platform API Specification, version 1.8, package sun.reflect.generics.tree, Java Platform API Specification, version 1.8, package sun.management, Java Platform API Specification, version 1.8, package org.slf4j, package sun.reflect.generics.scope, Java Platform API Specification, version 1.8, package com.redhat.insights, runtimes-java-api, version 2.0, package org.opentest4j, opentest4j, version 1.2.0, package sun.util.logging, Java Platform API Specification, version 1.8, package com.fasterxml.jackson.core, Jackson-core, version 2.17.2, package sun.jvmstat.monitor, package sun.reflect.generics.parser, Java Platform API Specification, version 1.8, package java.nio.file.spi, Java Platform API Specification, version 1.8, package java.net, Java Platform API Specification, version 1.8, package sun.security.provider, Java Platform API Specification, version 1.8, package com.sun.tools.attach.spi, package org.junit.platform.engine.reporting, junit-platform-engine, version 1.9.2, package sun.misc, Java Platform API Specification, version 1.8, package org.junit.platform.launcher, junit-platform-launcher, version 1.9.2, package java.time.format, Java Platform API Specification, version 1.8, package java.util.concurrent, Java Platform API Specification, version 1.8, package org.junit.platform.launcher.core, junit-platform-launcher, version 1.9.2, package org.junit.platform.commons.logging, junit-platform-commons, version 1.9.2, package com.fasterxml.jackson.databind.jsonFormatVisitors, jackson-databind, version 2.17.2, package java.util.concurrent.locks, Java Platform API Specification, version 1.8, package sun.tools.attach, package sun.util, Java Platform API Specification, version 1.8, package org.junit.platform.engine, junit-platform-engine, version 1.9.2, package sun.text.resources.en, Java Platform API Specification, version 1.8, package sun.util.locale.provider, Java Platform API Specification, version 1.8, package java.util.function, Java Platform API Specification, version 1.8, package org.junit.jupiter.api.extension, junit-jupiter-api, version 5.9.2, package sun.security.util, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.discovery, junit-jupiter-engine, version 5.9.2, package com.redhat.insights.config, runtimes-java-api, version 2.0, package sun.reflect, Java Platform API Specification, version 1.8, package sun.net, Java Platform API Specification, version 1.8, package org.junit.jupiter.engine.discovery.predicates, junit-jupiter-engine, version 5.9.2, package com.redhat.insights.reports, runtimes-java-api, version 2.0, package jdk.internal.misc, Java Platform API Specification, version 1.8, package sun.net.www, Java Platform API Specification, version 1.8, package sun.net.spi, Java Platform API Specification, version 1.8, package sun.instrument, Java Platform API Specification, version 1.8, package org.slf4j.helpers, package jdk.internal.util, Java Platform API Specification, version 1.8, package java.lang.invoke, Java Platform API Specification, version 1.8, package sun.util.locale, Java Platform API Specification, version 1.8, package jdk.internal.platform, Java Platform API Specification, version 1.8, package com.fasterxml.jackson.databind, jackson-databind, version 2.17.2, package sun.nio.fs, Java Platform API Specification, version 1.8, package sun.text.resources, Java Platform API Specification, version 1.8, package org.apiguardian.api, apiguardian-api, version 1.1.2, package sun.net.www.protocol.jar, Java Platform API Specification, version 1.8, package java.lang.management, Java Platform API Specification, version 1.8, package javax.management, Java Platform API Specification, version 1.8, package sun.jvmstat.perfdata.monitor.v2_0, package java.util.concurrent.atomic, Java Platform API Specification, version 1.8, package org.junit.jupiter.api.io, junit-jupiter-api, version 5.9.2, package org.junit.jupiter.api.parallel, junit-jupiter-api, version 5.9.2, package org.junit.platform.launcher.listeners, junit-platform-launcher, version 1.9.2, package java.io, Java Platform API Specification, version 1.8, package org.junit.platform.engine.discovery, junit-platform-engine, version 1.9.2, package jdk.internal.org.objectweb.asm, Java Platform API Specification, version 1.8, package org.junit.platform.engine.support.descriptor, junit-platform-engine, version 1.9.2, package java.util.jar, Java Platform API Specification, version 1.8, package org.junit.platform.engine.support.discovery, junit-platform-engine, version 1.9.2, package org.junit.platform.commons, junit-platform-commons, version 1.9.2, package java.nio.file.attribute, Java Platform API Specification, version 1.8]",
+    "system.os.version" : "14.7.1",
+    "jvm.args" : [ "-ea", "-Didea.test.cyclic.buffer.size=ZZZZZZZZZ", "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=60059:/Applications/IntelliJ IDEA.app/Contents/bin", "-Dfile.encoding=ZZZZZZZZZ" ],
+    "java.vm.specification.version" : "1.8",
+    "java.vm.name" : "OpenJDK 64-Bit Server VM",
+    "jvm.heap.min" : 512,
+    "app.name" : "foo",
+    "app.user.name" : "beevans",
+    "java.version" : "1.8.0_382",
+    "java.command" : "com.intellij.rt.junit.JUnitStarter -ideVersion5 -junit5 com.redhat.insights.agent.AgentBasicReportTest,testOpenshiftWithSbom",
+    "jvm.heap.gc.details" : "gc::PS Scavenge::PS MarkSweep",
+    "java.specification.vendor" : "Oracle Corporation",
+    "java.home" : "/Library/Java/JavaVirtualMachines/jdk8u382-b05/Contents/Home/jre",
+    "jvm.heap.max" : 7282,
+    "system.arch" : "x86_64",
+    "java.library.path" : "/Users/beevans/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.",
+    "jvm.report_time" : 1732640997834,
+    "java.vendor" : "Temurin",
+    "java.vm.specification.vendor" : "Oracle Corporation",
+    "jvm.pid" : 82948,
+    "java.class.version" : "52.0",
+    "jvm.http.nonProxyHosts" : "local|*.local|169.254/16|*.169.254/16",
+    "system.hostname" : "beevans-mac",
+    "system.cores.logical" : 12
+  },
+  "cycloneDX" : {
+    "version" : "1",
+    "cyclonedx" : {
+      "serialNumber" : "urn:uuid:b6a99ca3-0fc7-41ec-b7c4-05ee279977b5",
+      "version" : 1,
+      "metadata" : {
+        "timestamp" : "2024-11-26T17:09:57Z",
+        "tools" : [ {
+          "vendor" : "Eclipse Foundation - https://projects.eclipse.org/projects/technology.jbom",
+          "name" : "jbom",
+          "version" : "unknown"
+        } ],
+        "component" : {
+          "name" : "192.168.0.13 (beevans-mac)",
+          "version" : "unknown",
+          "description" : "Java",
+          "type" : "application"
+        },
+        "manufacture" : {
+          "name" : "Unknown"
+        }
+      },
+      "components" : [ {
+        "name" : "byte-buddy-agent",
+        "version" : "agent/pom",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "4970ca464b1f70226b1b06a05c262026b51f5dea"
+        }, {
+          "alg" : "MD5",
+          "content" : "95c919fe313211ad498247deb76e00dc"
+        } ],
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/net.bytebuddy/byte-buddy-agent"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.0/byte-buddy-agent-1.14.0.jar!/META-INF/maven/net.bytebuddy/byte-buddy-agent/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "null:byte-buddy-agent:agent/pom"
+      }, {
+        "group" : "com.fasterxml.jackson.core",
+        "name" : "jackson-core",
+        "version" : "2.17.2",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "969a35cb35c86512acbadcdbbbfb044c877db814"
+        }, {
+          "alg" : "MD5",
+          "content" : "50c2dab1f29136714d5ef5c6c640336c"
+        } ],
+        "purl" : "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.2",
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/com.fasterxml.jackson.core/jackson-core"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.jar!/META-INF/maven/com.fasterxml.jackson.core/jackson-core/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "com.fasterxml.jackson.core:jackson-core:2.17.2"
+      }, {
+        "name" : "slf4j-simple",
+        "version" : "simple/pom",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "bfa4d4dad645a5b11c022ae0043bac2df6cf16b5"
+        }, {
+          "alg" : "MD5",
+          "content" : "2f6dd5da0703850d4af89524b38e250e"
+        } ],
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/org.slf4j/slf4j-simple"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/org/slf4j/slf4j-simple/2.0.7/slf4j-simple-2.0.7.jar!/META-INF/maven/org.slf4j/slf4j-simple/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "null:slf4j-simple:simple/pom"
+      }, {
+        "group" : "com.fasterxml.jackson.core",
+        "name" : "jackson-databind",
+        "version" : "2.17.2",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "e6deb029e5901e027c129341fac39e515066b68c"
+        }, {
+          "alg" : "MD5",
+          "content" : "3e1ff7c1f0fda885946619a47ef9d5de"
+        } ],
+        "purl" : "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.17.2",
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/com.fasterxml.jackson.core/jackson-databind"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.jar!/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      }, {
+        "name" : "runtimes-java-api",
+        "version" : "api/pom",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "bf1415a6afcc245ee30a7f50da539cabdaadaba3"
+        }, {
+          "alg" : "MD5",
+          "content" : "b3ba0edcf25654f9a7727e94bcd1418f"
+        } ],
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/com.redhat.insights/runtimes-java-api"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/com/redhat/insights/runtimes-java-api/2.0.3/runtimes-java-api-2.0.3.jar!/META-INF/maven/com.redhat.insights/runtimes-java-api/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "null:runtimes-java-api:api/pom"
+      }, {
+        "name" : "slf4j-api",
+        "version" : "api/pom",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "41eb7184ea9d556f23e18b5cb99cad1f8581fc00"
+        }, {
+          "alg" : "MD5",
+          "content" : "403dffa46cdd2e3c82da19df4f394a4c"
+        } ],
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/org.slf4j/slf4j-api"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar!/META-INF/maven/org.slf4j/slf4j-api/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "null:slf4j-api:api/pom"
+      }, {
+        "group" : "org.cyclonedx",
+        "name" : "cyclonedx-core-java",
+        "version" : "7.3.1",
+        "scope" : "required",
+        "hashes" : [ {
+          "alg" : "SHA-1",
+          "content" : "e891a609eae79267a05c0ccb6719adbf15eef28c"
+        }, {
+          "alg" : "MD5",
+          "content" : "8bf5ed26fce41ce6d915e7b0c04fdf87"
+        } ],
+        "purl" : "pkg:maven/org.cyclonedx/cyclonedx-core-java@7.3.1",
+        "properties" : [ {
+          "name" : "path",
+          "value" : "META-INF/maven/org.cyclonedx/cyclonedx-core-java"
+        }, {
+          "name" : "archive",
+          "value" : "pom.xml"
+        }, {
+          "name" : "codesource",
+          "value" : "/Users/beevans/.m2/repository/org/cyclonedx/cyclonedx-core-java/7.3.1/cyclonedx-core-java-7.3.1.jar!/META-INF/maven/org.cyclonedx/cyclonedx-core-java/pom.xml"
+        } ],
+        "type" : "library",
+        "bom-ref" : "org.cyclonedx:cyclonedx-core-java:7.3.1"
+      } ],
+      "dependencies" : [ {
+        "ref" : "null:slf4j-api:api/pom"
+      }, {
+        "ref" : "com.fasterxml.jackson.core:jackson-databind:2.17.2",
+        "dependsOn" : [ {
+          "ref" : "com.fasterxml.jackson.core:jackson-annotations:${jackson.version.annotations}"
+        }, {
+          "ref" : "com.fasterxml.jackson.core:jackson-core:${jackson.version.core}"
+        }, {
+          "ref" : "org.junit.vintage:junit-vintage-engine:null"
+        }, {
+          "ref" : "org.junit.jupiter:junit-jupiter:null"
+        }, {
+          "ref" : "org.assertj:assertj-core:null"
+        }, {
+          "ref" : "com.google.guava:guava-testlib:31.1-jre"
+        }, {
+          "ref" : "javax.measure:jsr-275:0.9.1"
+        }, {
+          "ref" : "org.openjdk.jol:jol-core:0.16"
+        }, {
+          "ref" : "org.mockito:mockito-core:4.11.0"
+        }, {
+          "ref" : "org.mockito:mockito-inline:4.11.0"
+        }, {
+          "ref" : "net.bytebuddy:byte-buddy:1.14.13"
+        } ]
+      }, {
+        "ref" : "null:byte-buddy-agent:agent/pom",
+        "dependsOn" : [ {
+          "ref" : "net.java.dev.jna:jna:${version.jna}"
+        }, {
+          "ref" : "net.java.dev.jna:jna-platform:${version.jna}"
+        }, {
+          "ref" : "junit:junit:${version.junit}"
+        }, {
+          "ref" : "org.mockito:mockito-core:${version.mockito}"
+        }, {
+          "ref" : "net.bytebuddy:byte-buddy:1.13.0"
+        } ]
+      }, {
+        "ref" : "null:slf4j-simple:simple/pom",
+        "dependsOn" : [ {
+          "ref" : "org.slf4j:slf4j-api:null"
+        }, {
+          "ref" : "org.slf4j:slf4j-api:${project.version}"
+        } ]
+      }, {
+        "ref" : "org.cyclonedx:cyclonedx-core-java:7.3.1",
+        "dependsOn" : [ {
+          "ref" : "commons-codec:commons-codec:1.15"
+        }, {
+          "ref" : "commons-io:commons-io:2.11.0"
+        }, {
+          "ref" : "org.apache.commons:commons-lang3:3.12.0"
+        }, {
+          "ref" : "com.github.package-url:packageurl-java:1.4.1"
+        }, {
+          "ref" : "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.1"
+        }, {
+          "ref" : "com.networknt:json-schema-validator:1.0.76"
+        }, {
+          "ref" : "org.assertj:assertj-core:3.23.1"
+        }, {
+          "ref" : "org.junit.jupiter:junit-jupiter-engine:5.9.1"
+        } ]
+      }, {
+        "ref" : "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "dependsOn" : [ {
+          "ref" : "ch.randelshofer:fastdoubleparser:1.0.0"
+        }, {
+          "ref" : "org.junit.jupiter:junit-jupiter:null"
+        }, {
+          "ref" : "org.junit.jupiter:junit-jupiter-api:null"
+        }, {
+          "ref" : "org.assertj:assertj-core:null"
+        } ]
+      }, {
+        "ref" : "null:runtimes-java-api:api/pom",
+        "dependsOn" : [ {
+          "ref" : "com.fasterxml.jackson.core:jackson-core:null"
+        }, {
+          "ref" : "com.fasterxml.jackson.core:jackson-databind:null"
+        }, {
+          "ref" : "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:null"
+        }, {
+          "ref" : "com.fasterxml.jackson.core:jackson-annotations:null"
+        }, {
+          "ref" : "org.wildfly.security:wildfly-elytron-x500-cert:null"
+        }, {
+          "ref" : "org.junit.jupiter:junit-jupiter:null"
+        }, {
+          "ref" : "javax.servlet:javax.servlet-api:null"
+        }, {
+          "ref" : "javax.servlet.jsp:javax.servlet.jsp-api:null"
+        }, {
+          "ref" : "org.mockito:mockito-core:null"
+        }, {
+          "ref" : "org.awaitility:awaitility:null"
+        }, {
+          "ref" : "uk.org.webcompere:system-stubs-jupiter:null"
+        } ]
+      } ]
+    }
+  },
+  "jars" : {
+    "version" : "1.0.0",
+    "jars" : [ {
+      "name" : "junit-platform-launcher-1.9.2.jar",
+      "version" : "1.9.2",
+      "attributes" : {
+        "sha1Checksum" : "38e0bfad8c57d4cd1a8f27926c25ffe9543068d6",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "eef139eb09c98e9cdd358b6ce4c6cdd59b30c6a88096e369c33ba96e67edf0e4",
+        "sha512Checksum" : "9b2e14968a4567e42792adfe04ab32a6d77a3be737257349d6410c968a6525f1be36dfcb1a7ce562d5e9179391d2c857ad8cf82cc55264d50d82211db636a7a1"
+      }
+    }, {
+      "name" : "idea_rt.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "8fa809c00d3a7b037e6fce34e699b2ca947dfa07",
+        "sha256Checksum" : "61f3ddd610aee429fb7bb0775379dc3c6d4542c6703eef6fb6ab3a6fea2eb89d",
+        "sha512Checksum" : "1c2fe8f7615254163b40ae0680c2a4d5cdcdf3154a072597dc5c3df171db9c967c2e949b19c16cb5400197f5b525c441ff9bc95de56d530c1b013da55e5d0753"
+      }
+    }, {
+      "name" : "junit5-rt.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "0c58a2048d0f3fbe978f41f3c84192987843905d",
+        "sha256Checksum" : "5e9375ee2e111e637ce18b99ae2e05c475e2910b045f822a10a6c149e560142d",
+        "sha512Checksum" : "94f85629f107892c50789764567e08977392d20513985c7b66397cf1db86e8d61c7fc0aa57d4bb3464ee0760290de5582cd2261941a209afa3c423c766f3b6f4"
+      }
+    }, {
+      "name" : "junit-rt.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "b8a49001d6818e89a5f260c52a581e1b10e5e72f",
+        "sha256Checksum" : "4acfb06fce217030b61d34a92c8486c6b6dc596add3a8f2ed94d1ed8a8b40a3f",
+        "sha512Checksum" : "f84e68e4a11588fd694349fc787747558c74337fa40b2bb1419da115df7a5f5eee6583b72f2ebf4f52acc3ee2cf1b6b0d0556e33d65065bc1964fa32de003217"
+      }
+    }, {
+      "name" : "charsets.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "4580dc096d2199954603028bc5a68ef8bae3bf91",
+        "sha256Checksum" : "32766d20f91a6ee0147da65ac66635c5f3bedf132d93c4cf5a8addebddc432fc",
+        "sha512Checksum" : "2e5523551e4c24dd1cd89250705c8430c2e0e1b2f32c7b8533d40f972bff525683d7f99e59ed30ff7b399757bef263870ad1c4009a35c3bf3c6d70c401173a7c"
+      }
+    }, {
+      "name" : "cldrdata.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "d32d5ac889a188645d7306282b11bd8337be64ef",
+        "sha256Checksum" : "a09572784d1bcd6f4429a67ad0e18a2d0f9afbd5bfdeb1e9c9d7884b5d0ece8a",
+        "sha512Checksum" : "cc8caa52fecfe222b5ab435308039c83ce5d26d8149ca090f2c7f6a7d11c0d194674221c3b77c784a2467067cda6b67f90c6a0524bddaa01b070d81ae513d7ad"
+      }
+    }, {
+      "name" : "dnsns.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "787cb782475446eb583694778ba6902141f0cf58",
+        "sha256Checksum" : "e8f1c026f1e1de0d3109c5ead6fcb9f3ad064ab561ca8ee711b6a4066abbf32e",
+        "sha512Checksum" : "98ec9f00dac67aac66d1eb7855fe7733c7c99d11de6cac5dade0ac5dde5a1163da91f38f89663901dffe549f56d77c1ee77a6dc712fbb0fa22e1092ea954cd74"
+      }
+    }, {
+      "name" : "jaccess.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "3597e34ef93d12925e29e21730f3d531196773b8",
+        "sha256Checksum" : "c09c5c3ad472b8a662af425a480d4b692c5384afe6068d8f01da1d78ac58d8ad",
+        "sha512Checksum" : "c262b38d022259c781d580b0b61bd26689b101c44fadb8da107cf9de1b14cff25d4e11b7ac8b5fa10bab5a9588e430d7cbcca8c41adce72c76a5d12a8012a559"
+      }
+    }, {
+      "name" : "localedata.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "a76a7bed6dee9c8b56678a59713c8e6368ea78be",
+        "sha256Checksum" : "94df2af4fbf3726edb8464804e8b0b2905981aa10e519232cc9d9241340a635c",
+        "sha512Checksum" : "fd5871c635659ef2add70a624a99677171a0f5055b5cf1c3bfcb8ffcae7cd95ec5860402e6b02193cef8f088ca550e0e6785bd9f38a21eda30f2eaa9362f739f"
+      }
+    }, {
+      "name" : "nashorn.jar",
+      "version" : "1.8.0_382-b05",
+      "attributes" : {
+        "sha1Checksum" : "360569f9f6bd95effaeb238ab0a063a8c5083ec3",
+        "sha256Checksum" : "31fa3a0bed9052b6943cdea320c2b20a49c2e79ca7107e45a46ddfc0ef588510",
+        "sha512Checksum" : "99bea3355e0e1ab57878b0b7dc6ce4a6936da24daeec928ddddd3e7e2f79a341c360b81dee1c9a882b4f4b60b6cebd6e3dff9489eb3bb711da9dfe893ea0d399"
+      }
+    }, {
+      "name" : "sunec.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "b64e040a2833a4bc9296a9a81a3b7318d4493417",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "d516509c7bb002b1906bd827c44511d29d1494c051878c812141f246ad64e0a2",
+        "sha512Checksum" : "f0bd2081a7329bfc86bce73cacb173a01b5a6baf247d56955b5cc8b80160374d2196ac82a12b41e773cd8cfc3f7cabfe84d3564acb63309643481b995f7b1497",
+        "Implementation-Vendor-Id" : "com.sun"
+      }
+    }, {
+      "name" : "sunjce_provider.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "ebaf985e8aec3d96859f016407e75627eb80f947",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "33f6ce161a8269337b4f33c9f5ad7ecf5bbbab19c7d9a129d0dd30414a8ec1fc",
+        "sha512Checksum" : "c815d1312ed1042b068617757a57fe3177d72fc6683fe0e605ecfc2cd70b8ddcb7dfab441243f199a7b06a9d8db84da289beb06172eb2b320947c2e3cf4ae161",
+        "Implementation-Vendor-Id" : "com.sun"
+      }
+    }, {
+      "name" : "sunpkcs11.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "38e2a2f796e8895463b06adb6a24d62cd8766059",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "3c0999e0e1de1ac4c2719917478318cb15c41abad89c16400835fb49b216b614",
+        "sha512Checksum" : "1871c2a8108c9506269b69054aa1b6f459804fa75290c184542cc6100e05e71583cc8de53880961b59a1fd44ffe0fa84a0f289a2b8a22eba279e0e4b5a579ac7",
+        "Implementation-Vendor-Id" : "com.sun"
+      }
+    }, {
+      "name" : "zipfs.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "562c720d4681afb0741b3ea325801bea7c994820",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "aab576c760af5157f7bc430c974f91b2b16233c7ff2eb5f653bfc1044c243169",
+        "sha512Checksum" : "9e3bcd9026d46581d28068f7f2aa25bbb57ac09cc23179e925540dee514491c15f20d60d981efc6156280c34f8a894b5f3e6ed5a84121d3dd97cd2e707c8ebeb"
+      }
+    }, {
+      "name" : "jce.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "0d400b53baaac6ef2d65178184718b441bb2fc03",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "03078c52deade3e77072f90c8c33cc1f95a6fd2e9e79a7e39f12f88c563a43d6",
+        "sha512Checksum" : "88904a7c92d70733117f330b50c23fb7867d1d4f9a3bb80a274243c38bf0455b3e1261b0b7c19ba7be6a0aa72d9b2bcfc796cf814ccbad61d26073c409eb724f",
+        "Implementation-Vendor-Id" : "com.sun"
+      }
+    }, {
+      "name" : "jfr.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "9ef0624201112997bceabc058a121d631e91340d",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "4651377b635ab42d5a4e2f71a275cdc3e43641dc686a0a260caa4ff4e1baecdb",
+        "sha512Checksum" : "4443e4275d71966e7d4958ebc5fba98d4bc6b0da71b7b5cb37091aca5c54108401e308b638abea0d96dde0b9e1112d6baaf2ea3046437d63675c9cadd9fb4e9a"
+      }
+    }, {
+      "name" : "jsse.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "9dbf4b08253ef57f113f5d8ef0bde7b0da18d9d3",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "344644f3c218ac7e649da6471cf844bb945056ff8954484068ce5caa8f6ee34f",
+        "sha512Checksum" : "b7fb6248f71070d600fcc334b9568bca3b1209e7e88ae85fab3b40980e653f9cda19056904461e2df11a278be9126afc92740b757472100947bdd2a94e051ae5"
+      }
+    }, {
+      "name" : "management-agent.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "857c1b0476bbf20251c92be278f91ebb17f03264",
+        "sha256Checksum" : "9beab7d4acc5497fb8bac074452425c0e22e157253eeea4dcd80cbf2dde1a36b",
+        "sha512Checksum" : "9f4872aef966a95167003ecc743905b3029264e7bd0c3cd19184d0c8dedb91664d2283bfc1c4321229e4bc8d9e91323581a7cb4305b580677679157c268d53c9"
+      }
+    }, {
+      "name" : "resources.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "6580103bf096ce51be020fbd66d6d07c20e55a3f",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "ca9ede49108ef8fdaf9d5fb184f852b88f61c89231edbbfa4db245cf38ae6947",
+        "sha512Checksum" : "afd78e2ad6bd148d60b84535a1c8f7d20a1f396d6dc977e5abe73d47044a20d11cd4ff3caa395a203203b8a4d3940a15c7e9da351316da0e6dfd6711b4898a7d"
+      }
+    }, {
+      "name" : "rt.jar",
+      "version" : "1.8.0_382",
+      "attributes" : {
+        "sha1Checksum" : "e4aa26bdec3f975bf63d4ebb06079776ff29b67d",
+        "Implementation-Vendor" : "Temurin",
+        "sha256Checksum" : "d246cc44a1cc426bb5ed052264bfe26d390511a44039350bb4659b617f32e3a2",
+        "sha512Checksum" : "25f817dfc75a8d8b3e24f67bc3f2161dcfe43696b4781438b43d91cdfb3698015208b98205b6d997c32ed727a1a309b47d6215802a66b4a95299e69f550e62a8"
+      }
+    }, {
+      "name" : "jackson-core-2.17.2.jar",
+      "version" : "2.17.2",
+      "attributes" : {
+        "sha1Checksum" : "969a35cb35c86512acbadcdbbbfb044c877db814",
+        "Implementation-Vendor" : "FasterXML",
+        "groupId" : "com.fasterxml.jackson.core",
+        "sha256Checksum" : "721a189241dab0525d9e858e5cb604d3ecc0ede081e2de77d6f34fa5779a5b46",
+        "artifactId" : "jackson-core",
+        "sha512Checksum" : "694ae3bf756421d925f833f59a6309c7748ac3a68b28ed4de8ce0d6f93347dfc19991d1106db911c7da78e20734e6f44a02caef751150378a6ffa638c80fc75b",
+        "Implementation-Vendor-Id" : "com.fasterxml.jackson.core",
+        "version" : "2.17.2"
+      }
+    }, {
+      "name" : "jackson-databind-2.17.2.jar",
+      "version" : "2.17.2",
+      "attributes" : {
+        "sha1Checksum" : "e6deb029e5901e027c129341fac39e515066b68c",
+        "Implementation-Vendor" : "FasterXML",
+        "groupId" : "com.fasterxml.jackson.core",
+        "sha256Checksum" : "c04993f33c0f845342653784f14f38373d005280e6359db5f808701cfae73c0c",
+        "artifactId" : "jackson-databind",
+        "sha512Checksum" : "ec62267bf58aea531ec7f253e67974fac89e8aa61e7b54a7fb00edf3132ecb969b510630fd353adbbd2ab7d845a25702f168c296c57983a00bd6abc9ce3630f9",
+        "Implementation-Vendor-Id" : "com.fasterxml.jackson.core",
+        "version" : "2.17.2"
+      }
+    }, {
+      "name" : "jackson-datatype-jsr310-2.17.2.jar",
+      "version" : "2.17.2",
+      "attributes" : {
+        "sha1Checksum" : "267b85e9ba2892a37be6d80aa9ca1438a0d8c210",
+        "Implementation-Vendor" : "FasterXML",
+        "groupId" : "com.fasterxml.jackson.datatype",
+        "sha256Checksum" : "9b80024a9822e70b07f6bb13824c76c137c1064a1b5eb518374ab141870fdbcc",
+        "artifactId" : "jackson-datatype-jsr310",
+        "sha512Checksum" : "745d9f1bcecccca2cdb20c09280e0b5ad5d73a107f05d0c89a89f7dbfae1a8a5f2c8fab908efd271da20a50da5c714acb88ac6aee24ce50a4cdf2d4b30d25677",
+        "Implementation-Vendor-Id" : "com.fasterxml.jackson.datatype",
+        "version" : "2.17.2"
+      }
+    }, {
+      "name" : "jackson-annotations-2.17.2.jar",
+      "version" : "2.17.2",
+      "attributes" : {
+        "sha1Checksum" : "147b7b9412ffff24339f8aba080b292448e08698",
+        "Implementation-Vendor" : "FasterXML",
+        "groupId" : "com.fasterxml.jackson.core",
+        "sha256Checksum" : "873a606e23507969f9bbbea939d5e19274a88775ea5a169ba7e2d795aa5156e1",
+        "artifactId" : "jackson-annotations",
+        "sha512Checksum" : "006d3a054b22daa7f378b005cc29b3544dc7f3b509176e0eac946e0a3bafa73b824bae61b5183b61938b19044d2142a285da2fce2ffdaef5bfe91b2d8dcb6804",
+        "Implementation-Vendor-Id" : "com.fasterxml.jackson.core",
+        "version" : "2.17.2"
+      }
+    }, {
+      "name" : "wildfly-elytron-x500-cert-2.4.2.Final.jar",
+      "version" : "2.4.2.Final",
+      "attributes" : {
+        "sha1Checksum" : "2d6576edc486b49c344e0b28ef5276255025d128",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.wildfly.security",
+        "sha256Checksum" : "0b61bac092e0be1477f0805400b0658da63621d8852facb2060b0803d1d5a2e5",
+        "artifactId" : "wildfly-elytron-x500-cert",
+        "sha512Checksum" : "a6ae04b8d77639eb8d7e1c3107a144ab3c14a3b3d451be716f754d5906c4e2748a7b28de13b2ae3200b0bcd2b23a583369311a831730f390d97e517f1221b6e8",
+        "Implementation-Vendor-Id" : "org.wildfly.security",
+        "version" : "2.4.2.Final"
+      }
+    }, {
+      "name" : "wildfly-elytron-asn1-2.4.2.Final.jar",
+      "version" : "2.4.2.Final",
+      "attributes" : {
+        "sha1Checksum" : "12f74c9bc35ea37eafce86dfeb24606b2ae80504",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.wildfly.security",
+        "sha256Checksum" : "be64692227de1b39c62e249c3f177f7c25a743ee81be9348a794cc1631412eb9",
+        "artifactId" : "wildfly-elytron-asn1",
+        "sha512Checksum" : "554c591b6b5a9c3fc21139b03078ad2cc53f09c4ea10a4e25ffe67a3c9fa1a2cad74a6d28a64e4d55a04c1cade65599b5dd1fe7fe5316198f6cba436bfbdcebb",
+        "Implementation-Vendor-Id" : "org.wildfly.security",
+        "version" : "2.4.2.Final"
+      }
+    }, {
+      "name" : "jboss-logging-3.5.3.Final.jar",
+      "version" : "3.5.3.Final",
+      "attributes" : {
+        "sha1Checksum" : "c88fc1d8a96d4c3491f55d4317458ccad53ca663",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.jboss.logging",
+        "sha256Checksum" : "7b119460de174195aca412dfed52ca0bbef0ece26c2d74301b6172cfadf4ff59",
+        "artifactId" : "jboss-logging",
+        "sha512Checksum" : "cf3d5ccb791c3cf52d6af509056a1027cb6182a552b6fc66a593cf119812ba229f52d73f26f11555f248c8ef7ac45c11c27acb3c56dc73e627feee8b53275766",
+        "version" : "3.5.3.Final"
+      }
+    }, {
+      "name" : "wildfly-elytron-x500-2.4.2.Final.jar",
+      "version" : "2.4.2.Final",
+      "attributes" : {
+        "sha1Checksum" : "21886da55dc5e0f886270a262875a17b54912e74",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.wildfly.security",
+        "sha256Checksum" : "73287e7b286f207fe71fab81c4b95b4d8dbe3240448f53ac5a2f354b5d29dbbe",
+        "artifactId" : "wildfly-elytron-x500",
+        "sha512Checksum" : "32ecc172e2c56e8c48caf4969f681bfdedcdadcabb49c317565872ab3e10f3e1ed5e39a66a048415953c956d4ef2f3a964fa6e2503692f95e0ab6969efbb2d3b",
+        "Implementation-Vendor-Id" : "org.wildfly.security",
+        "version" : "2.4.2.Final"
+      }
+    }, {
+      "name" : "wildfly-elytron-x500-cert-util-2.4.2.Final.jar",
+      "version" : "2.4.2.Final",
+      "attributes" : {
+        "sha1Checksum" : "2848f11427cf021b1585168d652c9f1ae8ada7c8",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.wildfly.security",
+        "sha256Checksum" : "e15dc70be3064071a803d2a71ec763e0d4ee05e6bdd33499de0b91ace69e2580",
+        "artifactId" : "wildfly-elytron-x500-cert-util",
+        "sha512Checksum" : "c5821b7640c66fbcca2434c7c11e32326f2f77b137b35881b6d912b896e921ca4ebd75a079fdeef97a4988ca2c4816e730cadb0401fde1c7b5ef14aa836a3815",
+        "Implementation-Vendor-Id" : "org.wildfly.security",
+        "version" : "2.4.2.Final"
+      }
+    }, {
+      "name" : "wildfly-common-1.6.0.Final.jar",
+      "version" : "1.6.0.Final",
+      "attributes" : {
+        "sha1Checksum" : "95271c25e78458b6b22e24cb830a3bbe073ee432",
+        "Implementation-Vendor" : "JBoss by Red Hat",
+        "groupId" : "org.wildfly.common",
+        "sha256Checksum" : "27b9a3eb5aba58f17680fd2ae51b8349bc98b5136dafeb1980d885b6ceac7429",
+        "artifactId" : "wildfly-common",
+        "sha512Checksum" : "de0e3eac4166024e14335d7237be36d5b5fc37de53f490d4f81718ff30979a97152f274aee9b85593e25ae86a362a79afdb62766fbd2beacb55a62a04200c575",
+        "version" : "1.6.0.Final"
+      }
+    }, {
+      "name" : "httpclient-4.5.14.jar",
+      "version" : "4.5.14",
+      "attributes" : {
+        "sha1Checksum" : "1194890e6f56ec29177673f2f12d0b8e627dec98",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "org.apache.httpcomponents",
+        "sha256Checksum" : "c8bc7e1c51a6d4ce72f40d2ebbabf1c4b68bfe76e732104b04381b493478e9d6",
+        "artifactId" : "httpclient",
+        "sha512Checksum" : "a084ef30fb0a2a25397d8fab439fe68f67e294bf53153e2e1355b8df92886d40fe6abe35dc84f014245f7158e92641bcbd98019b4fbbd9e5a0db495b160b4ced",
+        "Implementation-Vendor-Id" : "org.apache.httpcomponents",
+        "version" : "4.5.14"
+      }
+    }, {
+      "name" : "commons-logging-1.2.jar",
+      "version" : "1.2",
+      "attributes" : {
+        "sha1Checksum" : "4bfc12adfe4842bf07b657f0369c4cb522955686",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "commons-logging",
+        "sha256Checksum" : "daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636",
+        "artifactId" : "commons-logging",
+        "sha512Checksum" : "ed00dbfabd9ae00efa26dd400983601d076fe36408b7d6520084b447e5d1fa527ce65bd6afdcb58506c3a808323d28e88f26cb99c6f5db9ff64f6525ecdfa557",
+        "Implementation-Vendor-Id" : "org.apache",
+        "version" : "1.2"
+      }
+    }, {
+      "name" : "commons-codec-1.11.jar",
+      "version" : "1.11",
+      "attributes" : {
+        "sha1Checksum" : "3acb4705652e16236558f0f4f2192cc33c3bd189",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "commons-codec",
+        "sha256Checksum" : "e599d5318e97aa48f42136a2927e6dfa4e8881dff0e6c8e3109ddbbff51d7b7d",
+        "artifactId" : "commons-codec",
+        "sha512Checksum" : "d9586162b257386b5871e7e9ae255a38014a9efaeef5148de5e40a3b0200364dad8516bddd554352aa2e5337bec2cc11df88c76c4fdde96a40f3421aa60650d7",
+        "Implementation-Vendor-Id" : "commons-codec",
+        "version" : "1.11"
+      }
+    }, {
+      "name" : "httpcore-4.4.16.jar",
+      "version" : "4.4.16",
+      "attributes" : {
+        "sha1Checksum" : "51cf043c87253c9f58b539c9f7e44c8894223850",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "org.apache.httpcomponents",
+        "sha256Checksum" : "6c9b3dd142a09dc468e23ad39aad6f75a0f2b85125104469f026e52a474e464f",
+        "artifactId" : "httpcore",
+        "sha512Checksum" : "168026436a6bcf5e96c0c59606638abbdc30de4b405ae55afde70fdf2895e267a3d48bba6bdadc5a89f38e31da3d9a9dc91e1cab7ea76f5e04322cf1ec63b838",
+        "Implementation-Vendor-Id" : "org.apache",
+        "version" : "4.4.16"
+      }
+    }, {
+      "name" : "httpmime-4.5.14.jar",
+      "version" : "4.5.14",
+      "attributes" : {
+        "sha1Checksum" : "6662758a1f1cb1149cf916bdac28332e0902ec44",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "org.apache.httpcomponents",
+        "sha256Checksum" : "d401243d5c6eae928a37121b6e819158c8c32ea0584793e7285bb489ab2a3d17",
+        "artifactId" : "httpmime",
+        "sha512Checksum" : "884b062028f68278389b74ccfbc35142caae489ceda5df01d2c60df884b9604cd4055bf4e1524e0358661fa0e88e93e614fb6be590cb940510b07a37c0b0a20c",
+        "Implementation-Vendor-Id" : "org.apache.httpcomponents",
+        "version" : "4.5.14"
+      }
+    }, {
+      "name" : "slf4j-api-2.0.7.jar",
+      "version" : "2.0.7",
+      "attributes" : {
+        "sha1Checksum" : "41eb7184ea9d556f23e18b5cb99cad1f8581fc00",
+        "groupId" : "org.slf4j",
+        "sha256Checksum" : "5d6298b93a1905c32cda6478808ac14c2d4a47e91535e53c41f7feeb85d946f4",
+        "artifactId" : "slf4j-api",
+        "sha512Checksum" : "216d2cac27d501972c888f94dfa747d700b80d60813884b6ab4b12c6a3b17ed0c21a1d27e1aa4332c97c828f20039e3913d2763d7e1a3cef36ae4389a276e7a8",
+        "version" : "2.0.7"
+      }
+    }, {
+      "name" : "slf4j-simple-2.0.7.jar",
+      "version" : "2.0.7",
+      "attributes" : {
+        "sha1Checksum" : "bfa4d4dad645a5b11c022ae0043bac2df6cf16b5",
+        "groupId" : "org.slf4j",
+        "sha256Checksum" : "50eae3f1cc9a78a970970518e005d3f43d5cd3262d234f47ebdf3ca3f8bc01a7",
+        "artifactId" : "slf4j-simple",
+        "sha512Checksum" : "98981722ae8513770065e5de6f9e8d2cc441573664ce04f77a93c82a8f0077cba08029ee19a59e0b6de81967a220f878bd8ea8d5a93d38bc2b9001cee73d1fc0",
+        "version" : "2.0.7"
+      }
+    }, {
+      "name" : "jcl-over-slf4j-2.0.7.jar",
+      "version" : "2.0.7",
+      "attributes" : {
+        "sha1Checksum" : "f127fe5ee53404a8b3697cdd032dd1dd6a29dd77",
+        "groupId" : "org.slf4j",
+        "sha256Checksum" : "41806757e1d26dae5d6db2ca7d4a5176eed2d6e709cd86564d4a11dab0601742",
+        "artifactId" : "jcl-over-slf4j",
+        "sha512Checksum" : "221b39b85145cf7c245acb7f2692a02b6c5816f8b1187a1a77942dd39de958c1b01ecd066682eb88244f87b2a47513d40b6c1e69ef49a43b2a07ba818f124e17",
+        "version" : "2.0.7"
+      }
+    }, {
+      "name" : "packageurl-java-1.4.1.jar",
+      "version" : "1.4.1",
+      "attributes" : {
+        "sha1Checksum" : "0a0d1009191c1cf6b04f40d26e4717596f3a90e0",
+        "groupId" : "com.github.package-url",
+        "sha256Checksum" : "8e23280221afd1e6561d433dfb133252cd287167acb0eca5a991667118ff10a2",
+        "artifactId" : "packageurl-java",
+        "sha512Checksum" : "ea5ed91a395e3c8ef18d575d363dc30302986dc5cc8423e97950708cd48dd87e97176619a246d72e8f5b4ff1a7fbb2afb5e9b3c7a11aa7340b540655ba4d4e9b",
+        "version" : "1.4.1"
+      }
+    }, {
+      "name" : "maven-model-3.9.0.jar",
+      "version" : "3.9.0",
+      "attributes" : {
+        "sha1Checksum" : "83ffee8fb7c986acfd3e14ad869a6f3c4c0c25a5",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "org.apache.maven",
+        "sha256Checksum" : "8dd41e5f0a5c97194594d589a0005ae1c6cd827163da396c9fcd1cdcf189c6b1",
+        "artifactId" : "maven-model",
+        "sha512Checksum" : "510f3cffbd8ed2a841dd1d451197746d8022f3128a3ae572781f1cf6ee379ec444d58e919e4141e8b59a9af39aef7a98a1bc254bdad2ef042032eba6e478db7b",
+        "version" : "3.9.0"
+      }
+    }, {
+      "name" : "plexus-utils-3.4.2.jar",
+      "version" : "3.4.2",
+      "attributes" : {
+        "sha1Checksum" : "82445e007f9009ac5ba6ae5d6b6898c4ce54dcf6",
+        "groupId" : "org.codehaus.plexus",
+        "sha256Checksum" : "f957f13604ea1686de805801862f339dbbb6eab9a66f9cc7e4a5c5b27e4fcecc",
+        "artifactId" : "plexus-utils",
+        "sha512Checksum" : "23a56c88e8c124d6d690ba2e4007be2fa41009fd0c95c15129837722c6f56f30e58f2c4d93aa52b05bd37696e150bfb69e5413d16c7b6ed08ba9dad5adb23eba",
+        "version" : "3.4.2"
+      }
+    }, {
+      "name" : "cyclonedx-core-java-7.3.1.jar",
+      "version" : "7.3.1",
+      "attributes" : {
+        "sha1Checksum" : "e891a609eae79267a05c0ccb6719adbf15eef28c",
+        "groupId" : "org.cyclonedx",
+        "sha256Checksum" : "b986fe2f48e693398f674824087b258af7ee2dd70cafe3aa845d5972cf348b9e",
+        "artifactId" : "cyclonedx-core-java",
+        "sha512Checksum" : "627e5de00e84a53fb49dfd621a29af02b2e408ab21a0c1d238f1d11a0085b3b01d6d46aedaa23e4844574487d3b148d0e588df3a2ab6b00f388ef37e4990b098",
+        "version" : "7.3.1"
+      }
+    }, {
+      "name" : "commons-io-2.11.0.jar",
+      "version" : "2.11.0",
+      "attributes" : {
+        "sha1Checksum" : "a2503f302b11ebde7ebc3df41daebe0e4eea3689",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "commons-io",
+        "sha256Checksum" : "961b2f6d87dbacc5d54abf45ab7a6e2495f89b75598962d8c723cea9bc210908",
+        "artifactId" : "commons-io",
+        "sha512Checksum" : "5bd78eed456ede30119319c5bed8e3e4c443b6fd7bdb3a7a5686647bd83094d0c3e2832a7575cfb60e4ef25f08106b93476939d3adcfecf5533cc030b3039e10",
+        "version" : "2.11.0"
+      }
+    }, {
+      "name" : "commons-lang3-3.12.0.jar",
+      "version" : "3.12.0",
+      "attributes" : {
+        "sha1Checksum" : "c6842c86792ff03b9f1d1fe2aab8dc23aa6c6f0e",
+        "Implementation-Vendor" : "The Apache Software Foundation",
+        "groupId" : "org.apache.commons",
+        "sha256Checksum" : "d919d904486c037f8d193412da0c92e22a9fa24230b9d67a57855c5c31c7e94e",
+        "artifactId" : "commons-lang3",
+        "sha512Checksum" : "fbdbc0943cb3498b0148e86a39b773f97c8e6013740f72dbc727faeabea402073e2cc8c4d68198e5fc6b08a13b7700236292e99d4785f2c9989f2e5fac11fd81",
+        "version" : "3.12.0"
+      }
+    }, {
+      "name" : "jackson-dataformat-xml-2.14.1.jar",
+      "version" : "2.14.1",
+      "attributes" : {
+        "sha1Checksum" : "ccd98bd674080338a6ca4bcdd52be7fb465cec1d",
+        "Implementation-Vendor" : "FasterXML",
+        "groupId" : "com.fasterxml.jackson.dataformat",
+        "sha256Checksum" : "90fa6199c194cf3bad58073d3913b3e8a812d06a5db16faa554ba10f5d859436",
+        "artifactId" : "jackson-dataformat-xml",
+        "sha512Checksum" : "f5a8a6f445c157eb9b4615566a01cbf5f903301e4b496dcbc84138161dc606224d7324b30a0c851cbfa6f2b9ac7e53d07376735d3192a0f98b8c419c79a46006",
+        "Implementation-Vendor-Id" : "com.fasterxml.jackson.dataformat",
+        "version" : "2.14.1"
+      }
+    }, {
+      "name" : "stax2-api-4.2.1.jar",
+      "version" : "4.2.1",
+      "attributes" : {
+        "sha1Checksum" : "a3f7325c52240418c2ba257b103c3c550e140c83",
+        "Implementation-Vendor" : "fasterxml.com",
+        "groupId" : "org.codehaus.woodstox",
+        "sha256Checksum" : "678567e48b51a42c65c699f266539ad3d676d4b1a5b0ad7d89ece8b9d5772579",
+        "artifactId" : "stax2-api",
+        "sha512Checksum" : "00efc5d4d17540fb180c5b20d456630a8b3262dff46676689ae916ba16f0fbd9b1a71c7badfb254faad6597f94fed1edb96f77c15f40178eaf4d8cd35cea5e8d",
+        "Implementation-Vendor-Id" : "org.codehaus.woodstox",
+        "version" : "4.2.1"
+      }
+    }, {
+      "name" : "woodstox-core-6.4.0.jar",
+      "version" : "6.4.0",
+      "attributes" : {
+        "sha1Checksum" : "c47579857bbf12c85499f431d4ecf27d77976b7c",
+        "Implementation-Vendor" : "FasterXML",
+        "sha256Checksum" : "d6eb9f2f40049a7a808baf11ffba0737648e62ff52fde9271d808e5d57a27279",
+        "sha512Checksum" : "7da4cd51f7082e59b3cb78988cda78bf162e2b02457caf17242cb9cea9b8002ada15d4dfe774ca0355acdea95c88b67c4d06a27a61653cb84c9a46d27b2726c6",
+        "Implementation-Vendor-Id" : "com.fasterxml.woodstox"
+      }
+    }, {
+      "name" : "json-schema-validator-1.0.76.jar",
+      "version" : "1.0.76",
+      "attributes" : {
+        "sha1Checksum" : "bcaecaa0de78979a48960876c92e64977e5df840",
+        "groupId" : "com.networknt",
+        "sha256Checksum" : "09b74dae3ce9f8be1e7949bdefd31642ddda583e2eb356439d29f9411301eae0",
+        "artifactId" : "json-schema-validator",
+        "sha512Checksum" : "6f95ca290811883bf1d587b0fa3ba4dcf9371d382458ead539c0ea3bedf281d4b87e6b513a6aa9c60ac796eed722b67744600534c896df58bbc9dab1d235ad71",
+        "version" : "1.0.76"
+      }
+    }, {
+      "name" : "itu-1.7.0.jar",
+      "version" : "1.7.0",
+      "attributes" : {
+        "sha1Checksum" : "00c6977b9d42efa3f8c95c31db5313a96ffc1724",
+        "groupId" : "com.ethlo.time",
+        "sha256Checksum" : "55ceb418c9e8138c4fcf62e213c4c814d89e8a84c827d395407cbecba5d791e7",
+        "artifactId" : "itu",
+        "sha512Checksum" : "b29808a998e120d6fa97a19ea92402e57d06b92ddb98b892ae7c9de044b9e1d805dca2f7c0fe7faaa1fced7eecbda927d709113727a050972f24a75aa29525b8",
+        "version" : "1.7.0"
+      }
+    }, {
+      "name" : "tools.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "0816a3e083a1ed6330912f7e57e830234d07c4cf",
+        "sha256Checksum" : "5cd77117e71df11e8b713116e35e9bf39afdff5ccb787dd2d8a175a05f53adb0",
+        "sha512Checksum" : "7dfda6c7d86075a4fe37d6b3585962ac15ae6971720c8c1716dd0c148417a49b6da278c2dfceae8172e042678036e2c6a968a56b1e6bbe89bc3a111df5860439"
+      }
+    }, {
+      "name" : "junit-jupiter-5.9.2.jar",
+      "version" : "5.9.2",
+      "attributes" : {
+        "sha1Checksum" : "26c586fbe0ebd81b48c9f11f0d998124248697ae",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "99d4c0f95cdfa9b74408ffefd6a13e347e73e5d6f5e05bd2e2920e8c3645eefd",
+        "sha512Checksum" : "518967645266167d50416f234eaf324bbf6d701c19a96fe5699824b9078d765146335b1a57a5fdfce7a50e8f489c8a6edd4068cb9acf4acee130d6e7cfa3fb9d"
+      }
+    }, {
+      "name" : "junit-jupiter-api-5.9.2.jar",
+      "version" : "5.9.2",
+      "attributes" : {
+        "sha1Checksum" : "fed843581520eac594bc36bb4b0f55e7b947dda9",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "f767a170f97127b0ad3582bf3358eabbbbe981d9f96411853e629d9276926fd5",
+        "sha512Checksum" : "36efb8800c40b359133cfe823723c3d6f34b0d39df91187fb8f7f90339a7d9984a34b4d091c945475afc862f3e5ad5412516c1577656b1aee963fe0f6da0d59e"
+      }
+    }, {
+      "name" : "opentest4j-1.2.0.jar",
+      "version" : "1.2.0",
+      "attributes" : {
+        "sha1Checksum" : "28c11eb91f9b6d8e200631d46e20a7f407f2a046",
+        "Implementation-Vendor" : "opentest4j.org",
+        "sha256Checksum" : "58812de60898d976fb81ef3b62da05c6604c18fd4a249f5044282479fc286af2",
+        "sha512Checksum" : "17f77797a260eb2bd1666a90e25efc79a5413afa9df1c1cb6c4cd1949d61c38b241e3bb20956396b5f54d144720303d72a2ac00bc5bf245a260a3c3099e01c74"
+      }
+    }, {
+      "name" : "junit-platform-commons-1.9.2.jar",
+      "version" : "1.9.2",
+      "attributes" : {
+        "sha1Checksum" : "6f9f8621d8230cd38aa42e58ccbc0c00569131ce",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "624a3d745ef1d28e955a6a67af8edba0fdfc5c9bad680a73f67a70bb950a683d",
+        "sha512Checksum" : "dd259a9e2f37588552322c9b4dd37aad4daa2e2ae0c10b79e7e3e128698020b028020d7c7dfa058944b9fafa493f1cf8aaf6d32911292a7d4f01910106bb552b"
+      }
+    }, {
+      "name" : "apiguardian-api-1.1.2.jar",
+      "version" : "1.1.2",
+      "attributes" : {
+        "sha1Checksum" : "a231e0d844d2721b0fa1b238006d15c6ded6842a",
+        "Implementation-Vendor" : "apiguardian.org",
+        "sha256Checksum" : "b509448ac506d607319f182537f0b35d71007582ec741832a1f111e5b5b70b38",
+        "sha512Checksum" : "d7ccd0e7019f1a997de39d66dc0ad4efe150428fdd7f4c743c93884f1602a3e90135ad34baea96d5b6d925ad6c0c8487c8e78304f0a089a12383d4a62e2c9a61"
+      }
+    }, {
+      "name" : "junit-jupiter-params-5.9.2.jar",
+      "version" : "5.9.2",
+      "attributes" : {
+        "sha1Checksum" : "bc2765afb7b85b583c710dd259a11c6b8c39e912",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "bde91900a5ce5d6663bb44bc708494b35daefcd73e1bb7afa61a4affe38ea97d",
+        "sha512Checksum" : "6fd6fb739f9ab7d7d188a96e56c26979ab720f0dd7d9f12bf732bb3b1689ba4f5c327e86b4cfae5e468027ca11019dfcbfff60c0ec924c8bc69389bff03de98c"
+      }
+    }, {
+      "name" : "junit-jupiter-engine-5.9.2.jar",
+      "version" : "5.9.2",
+      "attributes" : {
+        "sha1Checksum" : "572f7a553b53f83ee59cc045ce1c3772864ab76c",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "74cfc49388f760413ff348ca2c9ab39527484b57deecd157f2275a5f8a5fe971",
+        "sha512Checksum" : "901f2910ed4b05984cfbd900e9a92122d363fd4556418b58cd0807af7e91a89c2653c73ee777e97d4d23e9fd364549b1d0430f5eb70fc259b522df5e0ed81578"
+      }
+    }, {
+      "name" : "junit-platform-engine-1.9.2.jar",
+      "version" : "1.9.2",
+      "attributes" : {
+        "sha1Checksum" : "40aeef2be7b04f96bb91e8b054affc28b7c7c935",
+        "Implementation-Vendor" : "junit.org",
+        "sha256Checksum" : "25f23dc535a091e9dc80c008faf29dcb92be902e6911f77a736fbaf019908367",
+        "sha512Checksum" : "99766a267099708337498c4b0cfe0b86733301cc59bb8b2b52a1151d78126a9226f4013d11d2bef990297c5e32b168e5b41b036f9a7cb9cc5b78ca0aacdc5a36"
+      }
+    }, {
+      "name" : "mockito-core-4.11.0.jar",
+      "version" : "4.11.0",
+      "attributes" : {
+        "sha1Checksum" : "ce5226440c2ee78915716d4ce3d10aed2dbf26fb",
+        "sha256Checksum" : "4b909690cab288c761eb94c0bf0e814496cf3921d8affac84cd87774530351e5",
+        "sha512Checksum" : "4c6f12cbcf48a2e3f6fe98d61759cef8f927d077baf96a89dd7274b34325d793d9da285d35a3cc874685989dcfdeeafc38f1d64b169871cb246ab9172559c4d9"
+      }
+    }, {
+      "name" : "objenesis-3.3.jar",
+      "version" : "3.3",
+      "attributes" : {
+        "sha1Checksum" : "1049c09f1de4331e8193e579448d0916d75b7631",
+        "Implementation-Vendor" : "Joe Walnes, Henri Tremblay, Leonardo Mesquita",
+        "sha256Checksum" : "02dfd0b0439a5591e35b708ed2f5474eb0948f53abf74637e959b8e4ef69bfeb",
+        "sha512Checksum" : "1fa990d15bd179f07ffbc460d580a6fd0562e45dee8bd4a9405917536b78f45c0d6f644b67f85d781c758aa56eff90aef23eedcc9bd7f5ff887a67b716083e61"
+      }
+    }, {
+      "name" : "mockito-junit-jupiter-4.11.0.jar",
+      "version" : "4.11.0",
+      "attributes" : {
+        "sha1Checksum" : "6a2a2d138141e9c003451292348173c899450872",
+        "sha256Checksum" : "f4b3694f60fccc7b520d8aea9b6c827d8e9949b652cad09fce10b546bf3ac537",
+        "sha512Checksum" : "fb66816334a30391a10252951845b6c1be3f6f849dc3c5815f08272b0c3fcb845466c3d7f4ceceb60ec1916857d36e3518015d021930b664425572018cd09f0a"
+      }
+    }, {
+      "name" : "awaitility-4.2.0.jar",
+      "version" : "4.2.0",
+      "attributes" : {
+        "sha1Checksum" : "2c39784846001a9cffd6c6b89c78de62c0d80fb8",
+        "groupId" : "org.awaitility",
+        "sha256Checksum" : "2d23b79211fdd19036f6940cc783543779320aaf86f38d6e385a2ff26da41272",
+        "artifactId" : "awaitility",
+        "sha512Checksum" : "4c422b4aef3dfceb040898f45cd1b2efb7bbf213ef9487334a0d0e674e494e120fef61348f8a81ce726f2f66dc426e133917de20c52b5d39d792e2dca7bc82d8",
+        "version" : "4.2.0"
+      }
+    }, {
+      "name" : "hamcrest-2.1.jar",
+      "version" : "2.1",
+      "attributes" : {
+        "sha1Checksum" : "9420ba32c29217b54eebd26ff7f9234d31c3fbb2",
+        "Implementation-Vendor" : "hamcrest.org",
+        "sha256Checksum" : "ba93b2e3a562322ba432f0a1b53addcc55cb188253319a020ed77f824e692050",
+        "sha512Checksum" : "13f22e9ec1598bf9105342b8db314ff0b687bd1ca939895f4f8039621d7882d9bc90ce763a79a0663230e806278c819966a8751f665f18b5ffd8dec8d1718709"
+      }
+    }, {
+      "name" : "byte-buddy-1.14.0.jar",
+      "version" : "1.14.0",
+      "attributes" : {
+        "sha1Checksum" : "93753506038396c37c029de1b54374b1f50a1eba",
+        "groupId" : "net.bytebuddy",
+        "sha256Checksum" : "0af7cfa59aaf7dff002de984896eb43c987c596f726ae635e0e0d8229f154297",
+        "artifactId" : "byte-buddy",
+        "sha512Checksum" : "9b94a4ab1b8804b477830de5a1e88b05b1d9ca78b3f4601037ef67a9082ed8efc77c975273a518c52143fc56f41f8525ebc41134847cbc7301f879615016b343",
+        "version" : "1.14.0"
+      }
+    }, {
+      "name" : "byte-buddy-agent-1.14.0.jar",
+      "version" : "1.14.0",
+      "attributes" : {
+        "sha1Checksum" : "4970ca464b1f70226b1b06a05c262026b51f5dea",
+        "groupId" : "net.bytebuddy",
+        "sha256Checksum" : "4b23cda64beade8b78ec80fd321e017a0cc2413e4d73f323d8e617222a0e5d2c",
+        "artifactId" : "byte-buddy-agent",
+        "sha512Checksum" : "d26f8735d438d9e5cb7cd96045b12976a1d9ff91a36301cd18c0903329c5c898fee69e48a9f1299300a172f0398da2afdf2ef723caba3cce7de1560227819e64",
+        "version" : "1.14.0"
+      }
+    }, {
+      "name" : "idea_rt.jar",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "8fa809c00d3a7b037e6fce34e699b2ca947dfa07",
+        "sha256Checksum" : "61f3ddd610aee429fb7bb0775379dc3c6d4542c6703eef6fb6ab3a6fea2eb89d",
+        "sha512Checksum" : "1c2fe8f7615254163b40ae0680c2a4d5cdcdf3154a072597dc5c3df171db9c967c2e949b19c16cb5400197f5b525c441ff9bc95de56d530c1b013da55e5d0753"
+      }
+    } ]
+  },
+  "details" : {
+    "version" : "1.0.1",
+    "workloadType" : "Unidentified",
+    "is_ocp" : "true",
+    "pod_name" : "XXX",
+    "pod_namespace" : "YYY"
+  }
+
+}

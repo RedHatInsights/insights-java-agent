@@ -26,6 +26,7 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
   static final String AGENT_ARG_POD_NAME = "pod_name";
   static final String AGENT_ARG_POD_NAMESPACE = "pod_namespace";
+  static final String AGENT_ARG_SEND_SBOM = "sbom";
 
   static final String PROPERTY_NOT_GIVEN_DEFAULT = "[NONE]";
   private final Map<String, String> args;
@@ -136,6 +137,10 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
   public boolean shouldDefer() {
     return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_SHOULD_DEFER, FALSE));
+  }
+
+  public boolean shouldSendSbom() {
+    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_SEND_SBOM, FALSE));
   }
 
   @Override

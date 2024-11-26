@@ -20,8 +20,12 @@ public final class CycloneDXSubreport implements InsightsSubreport {
 
   public CycloneDXSubreport(InsightsLogger logger, Instrumentation inst) {
     this.logger = logger;
-    this.sbom = new CycloneDXModel(logger);
     this.inst = inst;
+    this.sbom = new CycloneDXModel(logger);
+  }
+
+  public CycloneDXModel getSbom() {
+    return sbom;
   }
 
   @Override
@@ -32,8 +36,8 @@ public final class CycloneDXSubreport implements InsightsSubreport {
       return;
     }
 
-    Class[] classes = inst.getAllLoadedClasses();
-    for (Class clazz : classes) {
+    Class<?>[] classes = inst.getAllLoadedClasses();
+    for (Class<?> clazz : classes) {
       try {
         if (!isSkippable(clazz)) {
           ProtectionDomain pd = clazz.getProtectionDomain();
@@ -54,7 +58,6 @@ public final class CycloneDXSubreport implements InsightsSubreport {
       }
     }
 
-    CycloneDXModel sbom = new CycloneDXModel(logger);
     sbom.setComponents(libs.getLibraries());
     sbom.setDependencies(libs.getDependencies());
     //    sbom.save( filename );

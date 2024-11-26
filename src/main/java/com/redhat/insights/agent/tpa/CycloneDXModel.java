@@ -5,7 +5,7 @@ import com.redhat.insights.logging.InsightsLogger;
 import java.io.File;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.cyclonedx.BomGeneratorFactory;
@@ -32,7 +32,7 @@ public class CycloneDXModel extends Bom {
     jbom.setName("jbom");
     jbom.setVendor("Eclipse Foundation - https://projects.eclipse.org/projects/technology.jbom");
     jbom.setVersion(jbomVersion);
-    meta.setTools(new ArrayList<>(Arrays.asList(jbom)));
+    meta.setTools(Collections.singletonList(jbom));
 
     String description = "Java";
     String hostname = "unknown";
@@ -83,10 +83,10 @@ public class CycloneDXModel extends Bom {
       BomJsonGenerator bomGenerator =
           BomGeneratorFactory.createJson(CycloneDxSchema.VERSION_LATEST, this);
       String bomString = bomGenerator.toJsonString();
-      FileUtils.write(new File(filename), bomString, Charset.forName("UTF-8"), false);
+      FileUtils.write(new File(filename), bomString, StandardCharsets.UTF_8, false);
     } catch (Exception e) {
       logger.info("Couldn't save SBOM to " + filename);
-      e.printStackTrace();
+      //      e.printStackTrace();
     }
   }
 }

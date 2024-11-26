@@ -7,8 +7,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.insights.Filtering;
 import com.redhat.insights.reports.InsightsReport;
+
+import java.lang.instrument.Instrumentation;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import net.bytebuddy.agent.ByteBuddyAgent;
 import org.junit.jupiter.api.Test;
 
 public class AgentBasicReportTest {
@@ -43,5 +49,28 @@ public class AgentBasicReportTest {
     assertEquals("XXX", String.valueOf(d.get("pod_name")));
     assertEquals("YYY", String.valueOf(d.get("pod_namespace")));
     assertTrue(Boolean.valueOf(String.valueOf(d.get("is_ocp"))));
+  }
+
+  @Test
+  void testOpenshiftWithSbom() throws JsonProcessingException {
+    // Setup Byte Buddy agent
+    Instrumentation instrumentation = ByteBuddyAgent.install();
+
+    Optional<AgentConfiguration> oConfig =
+            parseArgs("name=foo;token=bar;pod_name=XXX;pod_namespace=YYY;sbom=true");
+    final InsightsReport report = AgentBasicReport.of(oConfig.get(), instrumentation);
+    report.generateReport(Filtering.DEFAULT);
+
+    ObjectMapper oMapper = new ObjectMapper();
+    Map<String, Object> r =
+            oMapper.readValue(report.serialize(), new TypeReference<Map<String, Object>>() {});
+    assertNotNull(r.get("details"));
+    Map<String, Object> d = (Map<String, Object>) r.get("details");
+    assertEquals("XXX", String.valueOf(d.get("pod_name")));
+    assertEquals("YYY", String.valueOf(d.get("pod_namespace")));
+    assertTrue(Boolean.valueOf(String.valueOf(d.get("is_ocp"))));
+
+    byte[] json = report.serializeRaw();
+    System.out.println(new String(json, StandardCharsets.UTF_8));
   }
 }

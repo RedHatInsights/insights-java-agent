@@ -24,8 +24,10 @@ public class AgentBasicReport extends AbstractTopLevelReportBase {
     Map<String, InsightsSubreport> reports = new HashMap<>();
     ClasspathJarInfoSubreport jarsReport = new ClasspathJarInfoSubreport(logger);
     reports.put("jars", jarsReport);
-    CycloneDXSubreport sbomReport = new CycloneDXSubreport(logger, instrumentation);
-    reports.put("cycloneDX", sbomReport);
+    if (configuration.shouldSendSbom()) {
+      CycloneDXSubreport sbomReport = new CycloneDXSubreport(logger, instrumentation);
+      reports.put("cycloneDX", sbomReport);
+    }
     reports.put("details", AgentSubreport.of(jarsReport, configuration));
     return new AgentBasicReport(configuration, reports);
   }
