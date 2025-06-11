@@ -10,7 +10,7 @@ import glob
 from collections import namedtuple
 
 # Named tuples for structured data
-ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'ppid', 'cpu_percent', 'memory_rss', 'memory_vms'])
+ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'memory_rss', 'memory_vms', 'cmdline', 'exe'])
 MemoryInfo = namedtuple('MemoryInfo', ['total', 'available', 'used', 'free', 'cached', 'buffers'])
 
 class ProcUtil:
@@ -55,26 +55,26 @@ class ProcUtil:
     
     def get_pids(self):
         """Get list of all process IDs"""
-        pids = []
+        _pids = []
         for pid_dir in glob.glob('/proc/[0-9]*'):
             try:
                 pid = int(os.path.basename(pid_dir))
-                pids.append(pid)
+                _pids.append(pid)
             except ValueError:
                 continue
-        return sorted(pids)
+        return sorted(_pids)
     
-    def pid_exists(self, pid):
+    def pid_exists(self, p_id):
         """Check if a process ID exists"""
-        return os.path.isdir(f'/proc/{pid}')
+        return os.path.isdir(f'/proc/{p_id}')
     
-    def get_process_info(self, pid):
+    def get_process_info(self, p_id):
         """Get detailed information about a process"""
-        if not self.pid_exists(pid):
+        if not self.pid_exists(p_id):
             return None
         
         # Read /proc/pid/stat
-        stat_content = self._read_file(f'/proc/{pid}/stat')
+        stat_content = self._read_file(f'/proc/{p_id}/stat')
         if not stat_content:
             return None
         
@@ -85,77 +85,66 @@ class ProcUtil:
         # Extract relevant fields
         name = stat_fields[1].strip('()')
         status = stat_fields[2]
-        ppid = 1 # int(stat_fields[3])
-        
+
         # Memory information from /proc/pid/status
-        status_content = self._read_file_lines(f'/proc/{pid}/status')
+        status_content = self._read_file_lines(f'/proc/{p_id}/status')
         memory_rss = 0
         memory_vms = 0
-        
+
         for line in status_content:
             if line.startswith('VmRSS:'):
                 memory_rss = int(line.split()[1]) * 1024  # Convert kB to bytes
             elif line.startswith('VmSize:'):
                 memory_vms = int(line.split()[1]) * 1024  # Convert kB to bytes
-        
-        # Calculate CPU percentage (simplified)
-        cpu_percent = self._get_process_cpu_percent(pid)
-        
-        return ProcessInfo(pid, name, status, ppid, cpu_percent, memory_rss, memory_vms)
-    
-    def _get_process_cpu_percent(self, pid):
-        """Calculate CPU percentage for a process (simplified)"""
-        stat_content = self._read_file(f'/proc/{pid}/stat')
-        if not stat_content:
-            return 0.0
-        
-        stat_fields = stat_content.split()
-        if len(stat_fields) < 24:
-            return 0.0
-        
+
+        # Get command line
+        cmdline = self.get_process_cmdline(p_id)
+
+        # Get executable path
+        exe = self.get_process_exe(p_id)
+
+        return ProcessInfo(p_id, name, status, memory_rss, memory_vms, cmdline, exe)
+
+    def get_process_cmdline(self, pid):
+        """Get process command line arguments"""
+        cmdline_content = self._read_file(f'/proc/{pid}/cmdline')
+        if not cmdline_content:
+            return []
+
+        # Command line arguments are null-separated
+        # Filter out empty strings that can occur with trailing nulls
+        args = [arg for arg in cmdline_content.split('\x00') if arg]
+        return args
+
+    def get_process_cwd(self, pid):
+        """Get process current working directory"""
         try:
-            utime = int(stat_fields[13])  # User time
-            stime = int(stat_fields[14])  # System time
-            total_time = utime + stime
-            
-            # Simple approach: compare with cached values
-            current_time = time.time()
-            
-            if pid in self._process_cpu_cache:
-                last_total, last_time = self._process_cpu_cache[pid]
-                time_delta = current_time - last_time
-                cpu_delta = total_time - last_total
-                
-                if time_delta > 0:
-                    # CPU percentage approximation
-                    cpu_percent = (cpu_delta / (time_delta * 100.0)) * 100.0
-                    cpu_percent = min(cpu_percent, 100.0)  # Cap at 100%
-                else:
-                    cpu_percent = 0.0
-            else:
-                cpu_percent = 0.0
-            
-            self._process_cpu_cache[pid] = (total_time, current_time)
-            return cpu_percent
-            
-        except (ValueError, IndexError):
-            return 0.0
-    
+            return os.readlink(f'/proc/{pid}/cwd')
+        except (OSError, IOError):
+            return None
+
+    def get_process_exe(self, pid):
+        """Get process executable path"""
+        try:
+            return os.readlink(f'/proc/{pid}/exe')
+        except (OSError, IOError):
+            return None
+
     def get_processes(self):
         """Get information about all processes"""
-        processes = []
+        _processes = []
         for pid in self.get_pids():
             proc_info = self.get_process_info(pid)
             if proc_info:
-                processes.append(proc_info)
-        return processes
+                _processes.append(proc_info)
+        return _processes
     
     def get_process_by_name(self, name):
         """Find processes by name"""
         matching = []
-        for proc in self.get_processes():
-            if name.lower() in proc.name.lower():
-                matching.append(proc)
+        for _p in self.get_processes():
+            if name.lower() in _p.name.lower():
+                matching.append(_p)
         return matching
     
     def get_uptime(self):
@@ -192,15 +181,22 @@ def process_exists(pid):
 if __name__ == '__main__':
     proc = ProcUtil()
     
-    print("=== System Information ===")
+#    print("=== System Information ===")
     mem = proc.get_memory_info()
     print(f"Memory: {mem.used // (1024**3):.1f}GB / {mem.total // (1024**3):.1f}GB ({(mem.used/mem.total)*100:.1f}%)")
     
-    print(f"Uptime: {proc.get_uptime():.0f} seconds")
+#    print(f"Uptime: {proc.get_uptime():.0f} seconds")
     
-    print("\n=== Top 5 Processes by Memory ===")
+#    print("\n=== Top 5 Processes by Memory ===")
     processes = proc.get_processes()
-    top_memory = sorted(processes, key=lambda p: p.memory_rss, reverse=True)[:5]
+#    top_memory = sorted(processes, key=lambda p: p.memory_rss, reverse=True)[:5]
     
-    for p in top_memory:
-        print(f"PID {p.pid}: {p.name} ({p.memory_rss // (1024**2):.1f}MB)")
+    for p in processes:
+        if p.cmdline is None:
+            continue
+        # ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'memory_rss', 'memory_vms', 'cmdline', 'exe'])
+        # Check if 'java' is in the process name or command line
+        if 'java' in p.name.lower() or \
+                any('java' in str(arg).lower() for arg in p.cmdline):
+            print(f"Java process detected: PID={p.pid}, Name={p.name}, Cmdline={p.cmdline}")
+#        print(f"PID {p.pid}: {p.name} ({p.memory_rss // (1024**2):.1f}MB)")
