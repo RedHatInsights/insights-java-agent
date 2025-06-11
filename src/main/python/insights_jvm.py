@@ -1,7 +1,10 @@
 """
 insights_jvm.py - A zero-dependency script to scan RHEL systems for
 JVM processes and create a JSON report for upload to Insights.
-Parses /proc filesystem to gather system and process information
+Parses /proc filesystem to gather system and process information.
+An alternative would be to look in /tmp/hsperfdata_<userid> for PIDs
+that we have read access to. The disadvantages of this route include
+needing to parse the hsperfdata format.
 """
 
 # FIXME This needs to be replaced before deploy
@@ -13,14 +16,9 @@ from collections import namedtuple
 
 # Named tuples for structured data
 ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'memory_rss', 'memory_vms', 'cmdline', 'exe'])
-MemoryInfo = namedtuple('MemoryInfo', ['total', 'available', 'used', 'free', 'cached', 'buffers'])
 
 class ProcUtil:
-    def __init__(self):
-        self._last_cpu_times = None
-        self._last_cpu_time = None
-        self._process_cpu_cache = {}
-    
+    """Simple class to replace psutil functionality """
     def _read_file(self, filepath):
         """Safely read a file and return its contents"""
         try:
@@ -28,33 +26,12 @@ class ProcUtil:
                 return f.read().strip()
         except (IOError, OSError):
             return None
-    
+
     def _read_file_lines(self, filepath):
         """Safely read a file and return lines as a list"""
         content = self._read_file(filepath)
         return content.split('\n') if content else []
-    
-    def get_memory_info(self):
-        """Get system memory information"""
-        meminfo = {}
-        lines = self._read_file_lines('/proc/meminfo')
 
-        for line in lines:
-            if ':' in line:
-                key, value = line.split(':', 1)
-                # Extract numeric value (assuming kB)
-                value = int(value.strip().split()[0]) * 1024  # Convert kB to bytes
-                meminfo[key] = value
-
-        total = meminfo.get('MemTotal', 0)
-        free = meminfo.get('MemFree', 0)
-        available = meminfo.get('MemAvailable', free)  # Fallback to free if available not present
-        buffers = meminfo.get('Buffers', 0)
-        cached = meminfo.get('Cached', 0)
-        used = total - available
-
-        return MemoryInfo(total, available, used, free, cached, buffers)
-    
     def get_pids(self):
         """Get list of all process IDs"""
         _pids = []
@@ -65,25 +42,25 @@ class ProcUtil:
             except ValueError:
                 continue
         return sorted(_pids)
-    
+
     def pid_exists(self, p_id):
         """Check if a process ID exists"""
         return os.path.isdir(f'/proc/{p_id}')
-    
+
     def get_process_info(self, p_id):
         """Get detailed information about a process"""
         if not self.pid_exists(p_id):
             return None
-        
+
         # Read /proc/pid/stat
         stat_content = self._read_file(f'/proc/{p_id}/stat')
         if not stat_content:
             return None
-        
+
         stat_fields = stat_content.split()
         if len(stat_fields) < 24:
             return None
-        
+
         # Extract relevant fields
         name = stat_fields[1].strip('()')
         status = stat_fields[2]
@@ -133,7 +110,7 @@ class ProcUtil:
             if proc_info:
                 _processes.append(proc_info)
         return _processes
-    
+
     def get_process_by_name(self, name):
         """Find processes by name"""
         matching = []
@@ -141,14 +118,14 @@ class ProcUtil:
             if name.lower() in _p.name.lower():
                 matching.append(_p)
         return matching
-    
+
     def get_uptime(self):
         """Get system uptime in seconds"""
         uptime_content = self._read_file('/proc/uptime')
         if uptime_content:
             return float(uptime_content.split()[0])
         return 0.0
-    
+
     def get_boot_time(self):
         """Get system boot time as timestamp"""
         stat_content = self._read_file_lines('/proc/stat')
@@ -164,32 +141,45 @@ def convert_namedtuples(obj):
     """Recursively convert named tuples to dictionaries."""
     if hasattr(obj, '_asdict'):
         return {k: convert_namedtuples(v) for k, v in obj._asdict().items()}
-    elif isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple)):
         return [convert_namedtuples(item) for item in obj]
-    else:
-        return obj
+    return obj
 
 def pretty_json(nt):
     """Convert named tuple (with potential nesting) to pretty JSON."""
     converted = convert_namedtuples(nt)
     return json.dumps(converted, indent=2, sort_keys=True)
 
+def get_classpath(cmdline):
+    """Retrieve classpath from list of Java args"""
+    it_args = iter(cmdline)
+    try:
+        while True:
+            item = next(it_args)
+            if item in ['-classpath', '-cp']:
+                return next(it_args)
+    except StopIteration:
+        pass
+    return ""
+
+def make_report(nt):
+    """Convert Named Tuple to Report Dictionary"""
+    d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.name}
+    return d
 
 # Main script
 #
 if __name__ == '__main__':
     proc = ProcUtil()
-    
-#     mem = proc.get_memory_info()
-#     print(f"Memory: {mem.used // (1024**3):.1f}GB / {mem.total // (1024**3):.1f}GB ({(mem.used/mem.total)*100:.1f}%)")
-    
+
     processes = proc.get_processes()
     for p in processes:
         if p.cmdline is None:
             continue
-        # ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'memory_rss', 'memory_vms', 'cmdline', 'exe'])
         # Check if 'java' is in the process name or command line
         if 'java' in p.name.lower() or \
                 any('java' in str(arg).lower() for arg in p.cmdline):
 #             print(f"Java process detected: PID={p.pid}, Name={p.name}, Cmdline={p.cmdline}")
+            report = make_report(p)
             print(pretty_json(p))
+            print(pretty_json(report))
