@@ -4,6 +4,8 @@ JVM processes and create a JSON report for upload to Insights.
 Parses /proc filesystem to gather system and process information
 """
 
+# FIXME This needs to be replaced before deploy
+import json
 import os
 import time
 import glob
@@ -36,21 +38,21 @@ class ProcUtil:
         """Get system memory information"""
         meminfo = {}
         lines = self._read_file_lines('/proc/meminfo')
-        
+
         for line in lines:
             if ':' in line:
                 key, value = line.split(':', 1)
                 # Extract numeric value (assuming kB)
                 value = int(value.strip().split()[0]) * 1024  # Convert kB to bytes
                 meminfo[key] = value
-        
+
         total = meminfo.get('MemTotal', 0)
         free = meminfo.get('MemFree', 0)
         available = meminfo.get('MemAvailable', free)  # Fallback to free if available not present
         buffers = meminfo.get('Buffers', 0)
         cached = meminfo.get('Cached', 0)
         used = total - available
-        
+
         return MemoryInfo(total, available, used, free, cached, buffers)
     
     def get_pids(self):
@@ -116,13 +118,6 @@ class ProcUtil:
         args = [arg for arg in cmdline_content.split('\x00') if arg]
         return args
 
-    def get_process_cwd(self, pid):
-        """Get process current working directory"""
-        try:
-            return os.readlink(f'/proc/{pid}/cwd')
-        except (OSError, IOError):
-            return None
-
     def get_process_exe(self, pid):
         """Get process executable path"""
         try:
@@ -162,35 +157,33 @@ class ProcUtil:
                 return int(line.split()[1])
         return 0
 
+# JSON helpers
 
-# Convenience functions for common operations
-def virtual_memory():
-    """Get virtual memory info"""
-    return ProcUtil().get_memory_info()
+# For nested named tuples, you need a custom converter
+def convert_namedtuples(obj):
+    """Recursively convert named tuples to dictionaries."""
+    if hasattr(obj, '_asdict'):
+        return {k: convert_namedtuples(v) for k, v in obj._asdict().items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_namedtuples(item) for item in obj]
+    else:
+        return obj
 
-def pids():
-    """Get list of process IDs"""
-    return ProcUtil().get_pids()
-
-def process_exists(pid):
-    """Check if process exists"""
-    return ProcUtil().pid_exists(pid)
+def pretty_json(nt):
+    """Convert named tuple (with potential nesting) to pretty JSON."""
+    converted = convert_namedtuples(nt)
+    return json.dumps(converted, indent=2, sort_keys=True)
 
 
-# Example usage
+# Main script
+#
 if __name__ == '__main__':
     proc = ProcUtil()
     
-#    print("=== System Information ===")
-    mem = proc.get_memory_info()
-    print(f"Memory: {mem.used // (1024**3):.1f}GB / {mem.total // (1024**3):.1f}GB ({(mem.used/mem.total)*100:.1f}%)")
+#     mem = proc.get_memory_info()
+#     print(f"Memory: {mem.used // (1024**3):.1f}GB / {mem.total // (1024**3):.1f}GB ({(mem.used/mem.total)*100:.1f}%)")
     
-#    print(f"Uptime: {proc.get_uptime():.0f} seconds")
-    
-#    print("\n=== Top 5 Processes by Memory ===")
     processes = proc.get_processes()
-#    top_memory = sorted(processes, key=lambda p: p.memory_rss, reverse=True)[:5]
-    
     for p in processes:
         if p.cmdline is None:
             continue
@@ -198,5 +191,5 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or command line
         if 'java' in p.name.lower() or \
                 any('java' in str(arg).lower() for arg in p.cmdline):
-            print(f"Java process detected: PID={p.pid}, Name={p.name}, Cmdline={p.cmdline}")
-#        print(f"PID {p.pid}: {p.name} ({p.memory_rss // (1024**2):.1f}MB)")
+#             print(f"Java process detected: PID={p.pid}, Name={p.name}, Cmdline={p.cmdline}")
+            print(pretty_json(p))
