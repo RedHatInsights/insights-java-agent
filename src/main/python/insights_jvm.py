@@ -162,9 +162,44 @@ def get_classpath(cmdline):
         pass
     return ""
 
+def get_java_args(cmdline):
+    """Retrieve Java args"""
+    out = ""
+    it_args = iter(cmdline)
+    try:
+        while True:
+            item = next(it_args)
+            if item in ['-classpath', '-cp']:
+                next(it_args)
+            elif '-D' in item:
+                out += " -D=ZZZZZZZZZ"
+            else:
+                out += ' '+ item
+    except StopIteration:
+        pass
+    return out
+
+def get_java_memory(cmdline):
+    """Retrieve Java memory flags"""
+    min_mem = None
+    max_mem = None
+    it_args = iter(cmdline)
+    try:
+        while True:
+            item = next(it_args)
+            if '-Xmx' in item:
+                max_mem = "8192"
+            elif '-Xms' in item:
+                min_mem = "8192"
+    except StopIteration:
+        pass
+    return (min_mem, max_mem)
+
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
-    d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.name}
+    d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.name, \
+            "jvm_args": get_java_args(nt.cmdline)}
+    (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
     return d
 
 # Main script
@@ -174,12 +209,11 @@ if __name__ == '__main__':
 
     processes = proc.get_processes()
     for p in processes:
-        if p.cmdline is None:
+        if p.exe is None:
             continue
-        # Check if 'java' is in the process name or command line
-        if 'java' in p.name.lower() or \
-                any('java' in str(arg).lower() for arg in p.cmdline):
-#             print(f"Java process detected: PID={p.pid}, Name={p.name}, Cmdline={p.cmdline}")
+        # Check if 'java' is in the process name or exec'd binary
+        if 'java' in p.name.lower() or 'java' in p.exe.lower():
+#                 any('java' in str(arg).lower() for arg in p.cmdline):
             report = make_report(p)
             print(pretty_json(p))
             print(pretty_json(report))
