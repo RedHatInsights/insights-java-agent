@@ -9,12 +9,14 @@ needing to parse the hsperfdata format.
 
 # FIXME This needs to be replaced before deploy
 import json
-import os
 import time
+import os
 import subprocess
 import glob
 from collections import namedtuple
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
 
 # Named tuples for structured data
 ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'launch_time', 'cmdline', 'exe'])
@@ -142,6 +144,148 @@ class ProcUtil:
                 return int(line.split()[1])
         return 0
 
+@dataclass
+class JVMInfo:
+    """Container for parsed JVM information"""
+    system_properties: Dict[str, str]
+    vm_flags: Dict[str, str]
+    vm_arguments: List[str]
+    non_default_vm_flags: Dict[str, str]
+
+class JInfoParser:
+    """Parser for jinfo -v output"""
+
+    def __init__(self):
+        self.system_properties = {}
+        self.vm_flags = {}
+        self.vm_arguments = []
+        self.non_default_vm_flags = {}
+
+    def parse_output(self, output: str) -> JVMInfo:
+        """Parse jinfo -v output text"""
+        self._reset()
+        lines = output.strip().split('\n')
+
+        current_section = None
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Identify sections
+            if line.startswith('Java System Properties:'):
+                current_section = 'properties'
+                continue
+            elif line.startswith('VM Flags:'):
+                current_section = 'flags'
+                continue
+            elif line.startswith('VM Arguments:'):
+                current_section = 'arguments'
+                continue
+            elif line.startswith('Non-default VM flags:'):
+                current_section = 'non_default_flags'
+                continue
+
+            # Parse content based on current section
+            if current_section == 'properties':
+                self._parse_property_line(line)
+            elif current_section == 'flags':
+                self._parse_flag_line(line)
+            elif current_section == 'arguments':
+                self._parse_argument_line(line)
+            elif current_section == 'non_default_flags':
+                self._parse_non_default_flag_line(line)
+
+        return JVMInfo(
+            system_properties=self.system_properties.copy(),
+            vm_flags=self.vm_flags.copy(),
+            vm_arguments=self.vm_arguments.copy(),
+            non_default_vm_flags=self.non_default_vm_flags.copy()
+        )
+
+    def parse_from_file(self, filepath: str) -> JVMInfo:
+        """Parse jinfo output from a file"""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return self.parse_output(f.read())
+        except IOError as e:
+            raise RuntimeError(f"Failed to read file {filepath}: {e}")
+
+    def _reset(self):
+        """Reset internal state for new parsing"""
+        self.system_properties.clear()
+        self.vm_flags.clear()
+        self.vm_arguments.clear()
+        self.non_default_vm_flags.clear()
+
+    def _parse_property_line(self, line: str):
+        """Parse a system property line (key=value format)"""
+        if '=' in line:
+            key, value = line.split('=', 1)
+            self.system_properties[key.strip()] = value.strip()
+
+    def _parse_flag_line(self, line: str):
+        """Parse a VM flag line"""
+        # VM flags can be in format: -XX:flag=value or -XX:+flag or -XX:-flag
+        if line.startswith('-XX:'):
+            if '=' in line:
+                # Format: -XX:flag=value
+                flag_part = line[4:]  # Remove -XX:
+                key, value = flag_part.split('=', 1)
+                self.vm_flags[key.strip()] = value.strip()
+            elif line.startswith('-XX:+'):
+                # Format: -XX:+flag (enabled boolean flag)
+                flag = line[5:]  # Remove -XX:+
+                self.vm_flags[flag.strip()] = 'true'
+            elif line.startswith('-XX:-'):
+                # Format: -XX:-flag (disabled boolean flag)
+                flag = line[5:]  # Remove -XX:-
+                self.vm_flags[flag.strip()] = 'false'
+        elif line.startswith('-'):
+            # Other JVM arguments like -Xms, -Xmx, etc.
+            if '=' in line:
+                key, value = line.split('=', 1)
+                self.vm_flags[key.strip()] = value.strip()
+            else:
+                self.vm_flags[line.strip()] = 'true'
+
+    def _parse_argument_line(self, line: str):
+        """Parse VM arguments line"""
+        if line and not line.startswith('jvm_args:'):
+            self.vm_arguments.append(line.strip())
+
+    def _parse_non_default_flag_line(self, line: str):
+        """Parse non-default VM flags"""
+        # Usually in format: flag=value or flag
+        if '=' in line:
+            key, value = line.split('=', 1)
+            self.non_default_vm_flags[key.strip()] = value.strip()
+        else:
+            self.non_default_vm_flags[line.strip()] = 'true'
+
+def format_jvm_info(info: JVMInfo) -> str:
+    """Format JVMInfo object as readable text"""
+    output = []
+
+    output.append("=== SYSTEM PROPERTIES ===")
+    for key, value in sorted(info.system_properties.items()):
+        output.append(f"{key} = {value}")
+
+    output.append("\n=== VM FLAGS ===")
+    for key, value in sorted(info.vm_flags.items()):
+        output.append(f"{key} = {value}")
+
+    output.append("\n=== VM ARGUMENTS ===")
+    for arg in info.vm_arguments:
+        output.append(arg)
+
+    output.append("\n=== NON-DEFAULT VM FLAGS ===")
+    for key, value in sorted(info.non_default_vm_flags.items()):
+        output.append(f"{key} = {value}")
+
+    return '\n'.join(output)
+
 # JSON helpers
 
 # For nested named tuples, you need a custom converter
@@ -198,16 +342,9 @@ def run_jinfo(jinfo_path, pid):
                               timeout=10)
 
         if result.returncode == 0:
-            # Filter output for the specific PID
-            lines = result.stdout.strip().split('\n')
-            for line in lines:
-                if line.startswith(str(pid)):
-                    return True, f"Jinfo Output for PID {pid}:\n{line}"
+            return True, result.stdout
 
-            # If PID not found in jps output, return all output
-            return True, f"Jinfo Output (PID {pid} not found in current Java processes):\n{result.stdout}"
-
-        return False, f"JPS execution failed: {result.stderr}"
+        return False, "{result.stderr}"
 
     except subprocess.TimeoutExpired:
         return False, "JPS execution timed out"
@@ -244,30 +381,44 @@ def run_java_version(java_executable_path):
     except Exception as e:
         return False, f"Error running java -version: {e}"
 
+
+def jinfo_to_dict(jinfo_txt):
+    """Processes output from jinfo into a dict"""
+    parser = JInfoParser()
+    jvm_info = parser.parse_output(jinfo_txt)
+
+    # system_properties: Dict[str, str]
+    # vm_flags: Dict[str, str]
+    # vm_arguments: List[str]
+    # non_default_vm_flags: Dict[str, str]
+    #
+
+    return {"method": "jinfo", "system_properties": jvm_info.system_properties, \
+            "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
+            "non_default_vm_flags": jvm_info.non_default_vm_flags, "raw": jinfo_txt}
+
+def version_to_dict(output):
+    """Processes output from java -version into a dict"""
+    return {"method": "version", "raw": output}
+
 def get_extra_info(exe, pid):
     jinfo_path = find_jinfo_binary(exe)
 
     if jinfo_path:
-        print(f"Found jinfo binary at: {jinfo_path}")
         success, output = run_jinfo(jinfo_path, pid)
 
         if success:
-            return output
+            return jinfo_to_dict(output)
         else:
-            print(f"JPS failed: {output}")
-            print("\nFalling back to java -version...")
             success, output = run_java_version(exe)
             if success:
                 return output
             else:
                 print(f"Java version also failed: {output}")
     else:
-        print("jps binary not found in the same directory.")
-        print("Executing java -version instead...")
-
         success, output = run_java_version(exe)
         if success:
-            return output
+            return version_to_dict(output)
 #         else:
 #             print(f"Java version failed: {output}")
 
@@ -338,5 +489,5 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
             report = make_report(p)
-            print(pretty_json(p))
+            # print(pretty_json(p))
             print(pretty_json(report))
