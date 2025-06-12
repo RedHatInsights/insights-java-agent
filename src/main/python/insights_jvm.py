@@ -387,12 +387,6 @@ def jinfo_to_dict(jinfo_txt):
     parser = JInfoParser()
     jvm_info = parser.parse_output(jinfo_txt)
 
-    # system_properties: Dict[str, str]
-    # vm_flags: Dict[str, str]
-    # vm_arguments: List[str]
-    # non_default_vm_flags: Dict[str, str]
-    #
-
     return {"method": "jinfo", "system_properties": jvm_info.system_properties, \
             "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
             "non_default_vm_flags": jvm_info.non_default_vm_flags, "raw": jinfo_txt}
