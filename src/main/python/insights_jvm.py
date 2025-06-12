@@ -11,11 +11,12 @@ needing to parse the hsperfdata format.
 import json
 import time
 import os
+import re
 import subprocess
 import glob
 from collections import namedtuple
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 from dataclasses import dataclass
 
 # Named tuples for structured data
@@ -177,13 +178,13 @@ class JInfoParser:
             if line.startswith('Java System Properties:'):
                 current_section = 'properties'
                 continue
-            elif line.startswith('VM Flags:'):
+            if line.startswith('VM Flags:'):
                 current_section = 'flags'
                 continue
-            elif line.startswith('VM Arguments:'):
+            if line.startswith('VM Arguments:'):
                 current_section = 'arguments'
                 continue
-            elif line.startswith('Non-default VM flags:'):
+            if line.startswith('Non-default VM flags:'):
                 current_section = 'non_default_flags'
                 continue
 
@@ -372,7 +373,7 @@ def run_java_version(java_executable_path):
         output = result.stderr if result.stderr else result.stdout
 
         if result.returncode == 0 or output:
-            return True, f"Java Version Information:\n{output}"
+            return True, output
 
         return False, f"Java version command failed with return code {result.returncode}"
 
@@ -389,11 +390,113 @@ def jinfo_to_dict(jinfo_txt):
 
     return {"method": "jinfo", "system_properties": jvm_info.system_properties, \
             "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
-            "non_default_vm_flags": jvm_info.non_default_vm_flags, "raw": jinfo_txt}
+            "non_default_vm_flags": jvm_info.non_default_vm_flags}
 
 def version_to_dict(output):
-    """Processes output from java -version into a dict"""
-    return {"method": "version", "raw": output}
+    """
+    Parse java -version output and extract version information.
+
+    Args:
+        output: Raw output from 'java -version' command
+
+    Returns:
+        Dictionary containing parsed version information
+    """
+    info = {"method": "version", "raw": output}
+
+    if not output:
+        return info
+
+    lines = output.strip().split('\n')
+
+    # Parse first line for version number
+    if lines:
+        first_line = lines[0]
+
+        # Extract version number (handles both old and new format)
+        # Old format: java version "1.8.0_291"
+        # New format: openjdk version "11.0.12"
+        version_match = re.search(r'version "([^"]+)"', first_line)
+        if version_match:
+            full_version = version_match.group(1)
+            info['full_version'] = full_version
+
+            # Parse major version
+            if full_version.startswith('1.'):
+                # Old versioning scheme (Java 8 and below)
+                major_match = re.search(r'1\.(\d+)', full_version)
+                if major_match:
+                    info['major_version'] = major_match.group(1)
+            else:
+                # New versioning scheme (Java 9+)
+                major_match = re.search(r'^(\d+)', full_version)
+                if major_match:
+                    info['major_version'] = major_match.group(1)
+
+            # Extract minor and patch versions
+            version_parts = full_version.split('.')
+            if len(version_parts) >= 2:
+                if full_version.startswith('1.'):
+                    # Old format: 1.8.0_291
+                    if len(version_parts) >= 3:
+                        patch_part = version_parts[2]
+                        patch_match = re.search(r'^(\d+)', patch_part)
+                        if patch_match:
+                            info['patch_version'] = patch_match.group(1)
+
+                        # Extract update number
+                        update_match = re.search(r'_(\d+)', patch_part)
+                        if update_match:
+                            info['update_version'] = update_match.group(1)
+                else:
+                    # New format: 11.0.12
+                    if len(version_parts) >= 2:
+                        info['minor_version'] = version_parts[1]
+                    if len(version_parts) >= 3:
+                        info['patch_version'] = version_parts[2]
+
+        # Extract implementation (java, openjdk, etc.)
+        impl_match = re.search(r'^(\w+)', first_line)
+        if impl_match:
+            info['implementation'] = impl_match.group(1)
+
+    # Parse runtime environment info (second line)
+    if len(lines) >= 2:
+        runtime_line = lines[1]
+
+        # Extract runtime name
+        runtime_match = re.search(r'^([^(]+)', runtime_line)
+        if runtime_match:
+            info['runtime_name'] = runtime_match.group(1).strip()
+
+        # Extract build info
+        build_match = re.search(r'\(build ([^)]+)\)', runtime_line)
+        if build_match:
+            info['build_info'] = build_match.group(1)
+
+    # Parse VM info (third line)
+    if len(lines) >= 3:
+        vm_line = lines[2]
+
+        # Extract VM name
+        vm_match = re.search(r'^([^(]+)', vm_line)
+        if vm_match:
+            info['vm_name'] = vm_match.group(1).strip()
+
+        # Extract VM build info
+        vm_build_match = re.search(r'\(([^)]+)\)', vm_line)
+        if vm_build_match:
+            info['vm_build_info'] = vm_build_match.group(1)
+
+        # Extract VM mode
+        if 'mixed mode' in vm_line:
+            info['vm_mode'] = 'mixed mode'
+        elif 'interpreted mode' in vm_line:
+            info['vm_mode'] = 'interpreted mode'
+        elif 'compiled mode' in vm_line:
+            info['vm_mode'] = 'compiled mode'
+
+    return info
 
 def get_extra_info(exe, pid):
     jinfo_path = find_jinfo_binary(exe)
@@ -403,18 +506,11 @@ def get_extra_info(exe, pid):
 
         if success:
             return jinfo_to_dict(output)
-        else:
-            success, output = run_java_version(exe)
-            if success:
-                return output
-            else:
-                print(f"Java version also failed: {output}")
-    else:
-        success, output = run_java_version(exe)
-        if success:
-            return version_to_dict(output)
-#         else:
-#             print(f"Java version failed: {output}")
+
+    success, output = run_java_version(exe)
+    if success:
+        return version_to_dict(output)
+    return {}
 
 def get_classpath(cmdline):
     """Retrieve classpath from list of Java args"""
@@ -467,8 +563,9 @@ def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
     d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
             "jvm_args": get_java_args(nt.cmdline), "launch_time": nt.launch_time}
+    # Read Xmx and Xms from command line in case jinfo is unavailable
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
-    d['extra_info'] = get_extra_info(nt.exe, nt.pid)
+    d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
 # Main script
