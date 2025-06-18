@@ -365,12 +365,21 @@ def jinfo_to_dict(jinfo_txt):
     jvm_info = parser.parse_output(jinfo_txt)
 
 ## "system_properties": jvm_info.system_properties, \
+# "non_default_vm_flags": jvm_info.non_default_vm_flags, \
+
+    # FIXME
+    # vm_flags can be parsed to produce heap_max and heap_min
+    # vm_arguments may contain java_class_path
+    # vm_flags should be persisted?
+
     return {"method": "jinfo", \
             "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
-            "non_default_vm_flags": jvm_info.non_default_vm_flags, \
             "major_version": jvm_info.system_properties['java.specification.version'], \
             "vendor": jvm_info.system_properties['java.vm.vendor'], \
-            "system_os_version": jvm_info.system_properties['os.version']}
+            "java_vm_name": jvm_info.system_properties['java.vm.name'], \
+            "system_os_version": jvm_info.system_properties['os.version'], \
+            "os_arch": jvm_info.system_properties['os.arch'], \
+            "version_string": jvm_info.system_properties['java.runtime.version']}
 
 def version_to_dict(output):
     """
