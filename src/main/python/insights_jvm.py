@@ -364,9 +364,13 @@ def jinfo_to_dict(jinfo_txt):
     parser = JInfoParser()
     jvm_info = parser.parse_output(jinfo_txt)
 
-    return {"method": "jinfo", "system_properties": jvm_info.system_properties, \
+## "system_properties": jvm_info.system_properties, \
+    return {"method": "jinfo", \
             "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
-            "non_default_vm_flags": jvm_info.non_default_vm_flags}
+            "non_default_vm_flags": jvm_info.non_default_vm_flags, \
+            "major_version": jvm_info.system_properties['java.specification.version'], \
+            "vendor": jvm_info.system_properties['java.vm.vendor'], \
+            "system_os_version": jvm_info.system_properties['os.version']}
 
 def version_to_dict(output):
     """

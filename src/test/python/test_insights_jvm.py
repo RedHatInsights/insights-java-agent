@@ -24,5 +24,6 @@ class TestMath(unittest.TestCase):
         if jinfo_txt:
             parser = JInfoParser()
             jvm_info = parser.parse_output(jinfo_txt)
+            print(jvm_info)
             self.assertEqual(jvm_info.system_properties['java.specification.version'], '17')
 
