@@ -265,28 +265,6 @@ class JInfoParser:
         else:
             self.non_default_vm_flags[line.strip()] = 'true'
 
-def format_jvm_info(info: JVMInfo) -> str:
-    """Format JVMInfo object as readable text"""
-    output = []
-
-    output.append("=== SYSTEM PROPERTIES ===")
-    for key, value in sorted(info.system_properties.items()):
-        output.append(f"{key} = {value}")
-
-    output.append("\n=== VM FLAGS ===")
-    for key, value in sorted(info.vm_flags.items()):
-        output.append(f"{key} = {value}")
-
-    output.append("\n=== VM ARGUMENTS ===")
-    for arg in info.vm_arguments:
-        output.append(arg)
-
-    output.append("\n=== NON-DEFAULT VM FLAGS ===")
-    for key, value in sorted(info.non_default_vm_flags.items()):
-        output.append(f"{key} = {value}")
-
-    return '\n'.join(output)
-
 # JSON helpers
 
 # For nested named tuples, you need a custom converter
@@ -323,7 +301,6 @@ def find_jinfo_binary(java_executable_path):
 
     return None
 
-
 def run_jinfo(jinfo_path, pid):
     """
     Execute jinfo command to get Java process information.
@@ -351,7 +328,6 @@ def run_jinfo(jinfo_path, pid):
         return False, "JPS execution timed out"
     except Exception as e:
         return False, f"Error running JPS: {e}"
-
 
 def run_java_version(java_executable_path):
     """
@@ -559,6 +535,30 @@ def get_java_memory(cmdline):
         pass
     return (min_mem, max_mem)
 
+########## General helpers
+
+def format_jvm_info(info: JVMInfo) -> str:
+    """Format JVMInfo object as readable text"""
+    output = []
+
+    output.append("=== SYSTEM PROPERTIES ===")
+    for key, value in sorted(info.system_properties.items()):
+        output.append(f"{key} = {value}")
+
+    output.append("\n=== VM FLAGS ===")
+    for key, value in sorted(info.vm_flags.items()):
+        output.append(f"{key} = {value}")
+
+    output.append("\n=== VM ARGUMENTS ===")
+    for arg in info.vm_arguments:
+        output.append(arg)
+
+    output.append("\n=== NON-DEFAULT VM FLAGS ===")
+    for key, value in sorted(info.non_default_vm_flags.items()):
+        output.append(f"{key} = {value}")
+
+    return '\n'.join(output)
+
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
     d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
@@ -580,5 +580,4 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
             report = make_report(p)
-            # print(pretty_json(p))
             print(pretty_json(report))
