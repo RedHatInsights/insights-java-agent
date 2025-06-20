@@ -538,7 +538,15 @@ def get_java_args(args):
                 out += ' '+ item
     except StopIteration:
         pass
-    return out, jboss_home
+
+    if jboss_home:
+        try:
+            with open(f'{jboss_home}/version.txt', 'r') as f:
+                jboss_version = f.read().strip()
+        except (IOError, OSError):
+            return out, ""
+        return out, jboss_version
+    return out, "Unknown"
 
 def get_java_memory(cmdline):
     """Retrieve Java memory flags"""
