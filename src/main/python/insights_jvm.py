@@ -377,7 +377,7 @@ def jinfo_to_dict(jinfo_txt):
             "major_version": jvm_info.system_properties['java.specification.version'], \
             "vendor": jvm_info.system_properties['java.vm.vendor'], \
             "java_vm_name": jvm_info.system_properties['java.vm.name'], \
-            "system_os_version": jvm_info.system_properties['os.version'], \
+            "kernel_version": jvm_info.system_properties['os.version'], \
             "os_arch": jvm_info.system_properties['os.arch'], \
             "version_string": jvm_info.system_properties['java.runtime.version']}
 
@@ -513,10 +513,10 @@ def get_classpath(cmdline):
         pass
     return ""
 
-def get_java_args(cmdline):
-    """Retrieve Java args"""
+def get_java_args(args):
+    jboss_home = ""
     out = ""
-    it_args = iter(cmdline[1:-1])
+    it_args = iter(args[1:-1])
     try:
         while True:
             item = next(it_args)
@@ -524,13 +524,21 @@ def get_java_args(cmdline):
                 continue
             if item in ['-classpath', '-cp']:
                 next(it_args)
-            elif '-D' in item:
-                out += " -D=ZZZZZZZZZ"
+            elif item.startswith('-D'):
+                if not '=' in item:
+                    continue
+                (d_key, value, *foo) = item.split('=')
+                # print(len(foo))
+                # print(d_key)
+                if d_key.startswith('-Djboss.home.dir'):
+                    jboss_home = value
+                else:
+                    out += f' {d_key}=ZZZZZZZZZ'
             else:
                 out += ' '+ item
     except StopIteration:
         pass
-    return out
+    return out, jboss_home
 
 def get_java_memory(cmdline):
     """Retrieve Java memory flags"""
@@ -575,9 +583,11 @@ def format_jvm_info(info: JVMInfo) -> str:
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
     d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
-            "jvm_args": get_java_args(nt.cmdline), "launch_time": nt.launch_time}
-    # Read Xmx and Xms from command line in case jinfo is unavailable
+            "launch_time": nt.launch_time}
+    # Read explicit Xmx and Xms (if any) from command line in case jinfo is unavailable
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
+    (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
+    #(d['rhel_version'], d['processors']) = get_rhel_version_and_processor_count()
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
