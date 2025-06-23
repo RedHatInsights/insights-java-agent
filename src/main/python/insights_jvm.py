@@ -25,17 +25,11 @@ ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'launch_time',
 class ProcUtil:
     """Simple class to replace psutil functionality """
     def _read_file(self, filepath):
-        """Safely read a file and return its contents"""
         try:
             with open(filepath, 'r') as f:
                 return f.read().strip()
         except (IOError, OSError):
             return None
-
-    def _read_file_lines(self, filepath):
-        """Safely read a file and return lines as a list"""
-        content = self._read_file(filepath)
-        return content.split('\n') if content else []
 
     def get_pids(self):
         """Get list of all process IDs"""
@@ -130,20 +124,17 @@ class ProcUtil:
                 _processes.append(proc_info)
         return _processes
 
-    def get_uptime(self):
-        """Get system uptime in seconds"""
-        uptime_content = self._read_file('/proc/uptime')
-        if uptime_content:
-            return float(uptime_content.split()[0])
-        return 0.0
+    # def get_uptime(self):
+    #     """Get system uptime in seconds"""
+    #     uptime_content = self._read_file('/proc/uptime')
+    #     if uptime_content:
+    #         return float(uptime_content.split()[0])
+    #     return 0.0
 
-    def get_boot_time(self):
-        """Get system boot time as timestamp"""
-        stat_content = self._read_file_lines('/proc/stat')
-        for line in stat_content:
-            if line.startswith('btime'):
-                return int(line.split()[1])
-        return 0
+    def get_rhel_version_and_processor_count(self):
+        rhel_version = self._read_file('/etc/redhat-release')
+        # FIXME
+        return rhel_version, 1
 
 @dataclass
 class JVMInfo:
@@ -190,11 +181,14 @@ class JInfoParser:
 
             # Parse content based on current section
             if current_section == 'properties':
-                self._parse_property_line(line)
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    self.system_properties[key.strip()] = value.strip()
             elif current_section == 'flags':
                 self._parse_flag_line(line)
             elif current_section == 'arguments':
-                self._parse_argument_line(line)
+                if line and not line.startswith('jvm_args:'):
+                    self.vm_arguments.append(line.strip())
             elif current_section == 'non_default_flags':
                 self._parse_non_default_flag_line(line)
 
@@ -205,26 +199,12 @@ class JInfoParser:
             non_default_vm_flags=self.non_default_vm_flags.copy()
         )
 
-    def parse_from_file(self, filepath: str) -> JVMInfo:
-        """Parse jinfo output from a file"""
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                return self.parse_output(f.read())
-        except IOError as e:
-            raise RuntimeError(f"Failed to read file {filepath}: {e}")
-
     def _reset(self):
         """Reset internal state for new parsing"""
         self.system_properties.clear()
         self.vm_flags.clear()
         self.vm_arguments.clear()
         self.non_default_vm_flags.clear()
-
-    def _parse_property_line(self, line: str):
-        """Parse a system property line (key=value format)"""
-        if '=' in line:
-            key, value = line.split('=', 1)
-            self.system_properties[key.strip()] = value.strip()
 
     def _parse_flag_line(self, line: str):
         """Parse a VM flag line"""
@@ -250,11 +230,6 @@ class JInfoParser:
                 self.vm_flags[key.strip()] = value.strip()
             else:
                 self.vm_flags[line.strip()] = 'true'
-
-    def _parse_argument_line(self, line: str):
-        """Parse VM arguments line"""
-        if line and not line.startswith('jvm_args:'):
-            self.vm_arguments.append(line.strip())
 
     def _parse_non_default_flag_line(self, line: str):
         """Parse non-default VM flags"""
@@ -564,8 +539,6 @@ def get_java_memory(cmdline):
         pass
     return (min_mem, max_mem)
 
-########## General helpers
-
 def format_jvm_info(info: JVMInfo) -> str:
     """Format JVMInfo object as readable text"""
     output = []
@@ -595,14 +568,13 @@ def make_report(nt):
     # Read explicit Xmx and Xms (if any) from command line in case jinfo is unavailable
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
     (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
-    #(d['rhel_version'], d['processors']) = get_rhel_version_and_processor_count()
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
 # Main script
-#
 if __name__ == '__main__':
     proc = ProcUtil()
+    (rhel_version, processors) = proc.get_rhel_version_and_processor_count()
 
     processes = proc.get_processes()
     for p in processes:
