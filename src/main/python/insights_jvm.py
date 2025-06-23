@@ -7,8 +7,6 @@ that we have read access to. The disadvantages of this route include
 needing to parse the hsperfdata format.
 """
 
-# FIXME This needs to be replaced before deploy
-import json
 import time
 import os
 import re
@@ -50,7 +48,7 @@ class ProcUtil:
         """Check if a process ID exists"""
         return os.path.isdir(f'/proc/{p_id}')
 
-    def get_process_info(self, p_id) -> ProcessInfo:
+    def get_process_info(self, p_id):
         """Get detailed information about a process"""
         if not self.pid_exists(p_id):
             return None
@@ -242,10 +240,60 @@ def convert_namedtuples(obj):
         return [convert_namedtuples(item) for item in obj]
     return obj
 
+def _escape_json_string(s):
+    """Escape special characters in JSON strings."""
+    if not isinstance(s, str):
+        return str(s)
+    
+    # Replace backslashes first to avoid double escaping
+    s = s.replace('\\', '\\\\')
+    s = s.replace('"', '\\"')
+    s = s.replace('\n', '\\n')
+    s = s.replace('\r', '\\r')
+    s = s.replace('\t', '\\t')
+    s = s.replace('\b', '\\b')
+    s = s.replace('\f', '\\f')
+    return s
+
+def _serialize_json(obj, indent=0, sort_keys=True):
+    """Custom JSON serializer without using json module."""
+    indent_str = '  ' * indent
+    next_indent_str = '  ' * (indent + 1)
+    
+    if obj is None:
+        return 'null'
+    elif isinstance(obj, bool):
+        return 'true' if obj else 'false'
+    elif isinstance(obj, (int, float)):
+        return str(obj)
+    elif isinstance(obj, str):
+        return f'"{_escape_json_string(obj)}"'
+    elif isinstance(obj, (list, tuple)):
+        if not obj:
+            return '[]'
+        items = []
+        for item in obj:
+            serialized_item = _serialize_json(item, indent + 1, sort_keys)
+            items.append(f'{next_indent_str}{serialized_item}')
+        return '[\n' + ',\n'.join(items) + f'\n{indent_str}]'
+    elif isinstance(obj, dict):
+        if not obj:
+            return '{}'
+        items = []
+        keys = sorted(obj.keys()) if sort_keys else obj.keys()
+        for key in keys:
+            serialized_key = _escape_json_string(str(key))
+            serialized_value = _serialize_json(obj[key], indent + 1, sort_keys)
+            items.append(f'{next_indent_str}"{serialized_key}": {serialized_value}')
+        return '{\n' + ',\n'.join(items) + f'\n{indent_str}' + '}'
+    else:
+        # Fallback for other types
+        return f'"{_escape_json_string(str(obj))}"'
+
 def pretty_json(nt):
     """Convert named tuple (with potential nesting) to pretty JSON."""
     converted = convert_namedtuples(nt)
-    return json.dumps(converted, indent=2, sort_keys=True)
+    return _serialize_json(converted, indent=0, sort_keys=True)
 
 # Misc helper methods
 
@@ -330,13 +378,8 @@ def jinfo_to_dict(jinfo_txt):
     parser = JInfoParser()
     jvm_info = parser.parse_output(jinfo_txt)
 
-## "system_properties": jvm_info.system_properties, \
-# "non_default_vm_flags": jvm_info.non_default_vm_flags, \
-
-    # FIXME
     # vm_flags can be parsed to produce heap_max and heap_min
     # vm_arguments may contain java_class_path
-    # vm_flags should be persisted?
 
     return {"method": "jinfo", \
             "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
@@ -521,6 +564,7 @@ def get_java_memory(cmdline):
     it_args = iter(cmdline)
     try:
         while True:
+            # FIXME: This is a hack to get the memory flags
             item = next(it_args)
             if '-Xmx' in item:
                 max_mem = "8192"
@@ -534,7 +578,6 @@ def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
     d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
             "launch_time": nt.launch_time}
-    # Read explicit Xmx and Xms (if any) from command line in case jinfo is unavailable
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
     (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
     (d['rhel_version'], d['processors']) = (nt.rhel_version, nt.processors)
