@@ -20,10 +20,14 @@ from typing import Dict, List
 from dataclasses import dataclass
 
 # Named tuples for structured data
-ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'status', 'launch_time', 'cmdline', 'exe'])
+ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'launch_time', 'cmdline', 'exe', 'processors', 'rhel_version'])
 
 class ProcUtil:
     """Simple class to replace psutil functionality """
+    def __init__(self):
+        self.rhel_version = self._read_file('/etc/redhat-release')
+        self.processors = os.cpu_count()
+
     def _read_file(self, filepath):
         try:
             with open(filepath, 'r') as f:
@@ -46,7 +50,7 @@ class ProcUtil:
         """Check if a process ID exists"""
         return os.path.isdir(f'/proc/{p_id}')
 
-    def get_process_info(self, p_id):
+    def get_process_info(self, p_id) -> ProcessInfo:
         """Get detailed information about a process"""
         if not self.pid_exists(p_id):
             return None
@@ -62,13 +66,12 @@ class ProcUtil:
 
         # Extract relevant fields
         name = stat_fields[1].strip('()')
-        status = stat_fields[2]
 
         cmdline = self.get_process_cmdline(p_id)
         exe = self.get_process_exe(p_id)
         launch_time = self.get_process_launch_time(p_id)
 
-        return ProcessInfo(p_id, name, status, launch_time, cmdline, exe)
+        return ProcessInfo(p_id, name, launch_time, cmdline, exe, self.processors, self.rhel_version)
 
     def get_process_launch_time(self, pid):
         """Retrieve the process start time"""
@@ -123,18 +126,6 @@ class ProcUtil:
             if proc_info:
                 _processes.append(proc_info)
         return _processes
-
-    # def get_uptime(self):
-    #     """Get system uptime in seconds"""
-    #     uptime_content = self._read_file('/proc/uptime')
-    #     if uptime_content:
-    #         return float(uptime_content.split()[0])
-    #     return 0.0
-
-    def get_rhel_version_and_processor_count(self):
-        rhel_version = self._read_file('/etc/redhat-release')
-        # FIXME
-        return rhel_version, 1
 
 @dataclass
 class JVMInfo:
@@ -539,28 +530,6 @@ def get_java_memory(cmdline):
         pass
     return (min_mem, max_mem)
 
-def format_jvm_info(info: JVMInfo) -> str:
-    """Format JVMInfo object as readable text"""
-    output = []
-
-    output.append("=== SYSTEM PROPERTIES ===")
-    for key, value in sorted(info.system_properties.items()):
-        output.append(f"{key} = {value}")
-
-    output.append("\n=== VM FLAGS ===")
-    for key, value in sorted(info.vm_flags.items()):
-        output.append(f"{key} = {value}")
-
-    output.append("\n=== VM ARGUMENTS ===")
-    for arg in info.vm_arguments:
-        output.append(arg)
-
-    output.append("\n=== NON-DEFAULT VM FLAGS ===")
-    for key, value in sorted(info.non_default_vm_flags.items()):
-        output.append(f"{key} = {value}")
-
-    return '\n'.join(output)
-
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
     d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
@@ -568,13 +537,13 @@ def make_report(nt):
     # Read explicit Xmx and Xms (if any) from command line in case jinfo is unavailable
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
     (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
+    (d['rhel_version'], d['processors']) = (nt.rhel_version, nt.processors)
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
 # Main script
 if __name__ == '__main__':
     proc = ProcUtil()
-    (rhel_version, processors) = proc.get_rhel_version_and_processor_count()
 
     processes = proc.get_processes()
     for p in processes:
