@@ -559,9 +559,9 @@ def get_java_memory(cmdline):
             # FIXME: This is a hack to get the memory flags
             item = next(it_args)
             if '-Xmx' in item:
-                max_mem = "8192"
+                max_mem = item[4:]
             elif '-Xms' in item:
-                min_mem = "8192"
+                min_mem = item[4:]
     except StopIteration:
         pass
     return (min_mem, max_mem)
@@ -586,5 +586,5 @@ if __name__ == '__main__':
             continue
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
-            report = make_report(p)
+            report = {"version" : "1.0.2", "psdata": make_report(p)}
             print(pretty_json(report))
