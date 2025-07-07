@@ -391,16 +391,8 @@ def jinfo_to_dict(jinfo_txt):
             "version_string": jvm_info.system_properties['java.runtime.version']}
 
 def version_to_dict(output):
-    """
-    Parse java -version output and extract version information.
-
-    Args:
-        output: Raw output from 'java -version' command
-
-    Returns:
-        Dictionary containing parsed version information
-    """
-    info = {"method": "version", "raw": output}
+    # "raw": output
+    info = {"method": "version"}
 
     if not output:
         return info
