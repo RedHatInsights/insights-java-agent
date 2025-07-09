@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import glob
+import hashlib
 from collections import namedtuple
 from datetime import datetime
 from typing import Dict, List
@@ -294,6 +295,12 @@ def pretty_json(nt):
     """Convert named tuple (with potential nesting) to pretty JSON."""
     converted = convert_namedtuples(nt)
     return _serialize_json(converted, indent=0, sort_keys=True)
+
+def compute_sha256_hash(content):
+    """Compute SHA256 hash of string content."""
+    if isinstance(content, str):
+        content = content.encode('utf-8')
+    return hashlib.sha256(content).hexdigest()
 
 # Misc helper methods
 
@@ -587,4 +594,19 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
             report = {"version" : "1.0.2", "psdata": make_report(p)}
-            print(pretty_json(report))
+            # Compute SHA256 hash of the report contents
+            json_output = pretty_json(report)
+            content_hash = compute_sha256_hash(json_output)
+            
+            # Write report to file using SHA256 hash as filename
+            output_dir = "/var/tmp/insights-runtimes/uploads"
+            try:
+                os.makedirs(output_dir, exist_ok=True)
+                filename = f"{content_hash}_connect.json"
+                filepath = os.path.join(output_dir, filename)
+                
+                with open(filepath, 'w') as f:
+                    f.write(json_output)
+                
+            except (OSError, IOError) as e:
+                print(f"Error writing report to file: {e}")
