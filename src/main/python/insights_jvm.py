@@ -382,9 +382,9 @@ def jinfo_to_dict(jinfo_txt):
             "java.major.version": jvm_info.system_properties['java.specification.version'],
             "vendor": jvm_info.system_properties['java.vm.vendor'],
             "java.vm.name": jvm_info.system_properties['java.vm.name'],
-            "kernel.version": jvm_info.system_properties['os.version'],
+            "system.kernel.version": jvm_info.system_properties['os.version'],
             "system.arch": jvm_info.system_properties['os.arch'],
-            "version.string": jvm_info.system_properties['java.runtime.version']}
+            "java.runtime.version": jvm_info.system_properties['java.runtime.version']}
 
 def version_to_dict(output):
     # "raw": output
@@ -563,8 +563,10 @@ def get_java_memory(cmdline):
 
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
-    d = {'java.class.path': get_classpath(nt.cmdline), 'name': nt.exe,
-            'launch.time': nt.launch_time, 'rhel.version': nt.rhel_version,
+    d = {'java.class.path': get_classpath(nt.cmdline),
+         'name': nt.exe,
+         'launch.time': nt.launch_time,
+         'system.rhel.version': nt.rhel_version,
          'processors': nt.processors }
     (d['jvm.heap.min'], d['jvm.heap.max']) = get_java_memory(nt.cmdline)
     (d['jvm.args'], d['jboss.version']) = get_java_args(nt.cmdline)
