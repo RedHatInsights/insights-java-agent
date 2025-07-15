@@ -37,6 +37,13 @@ class TestMath(unittest.TestCase):
         (args, jboss_home) = get_java_args(lines)
         self.assertEqual(jboss_home, '/home/mnovak/tmp/jboss-eap-8.0')
 
+    def test_jvm_flags(self):
+        flags_text = "-XX:CICompilerCount=12 -XX:ConcGCThreads=4 -XX:G1ConcRefinementThreads=16 -XX:G1EagerReclaimRemSetThreshold=64 -XX:G1HeapRegionSize=8388608 -XX:G1RemSetArrayOfCardsEntries=64 -XX:G1RemSetHowlMaxNumBuckets=8 -XX:G1RemSetHowlNumBuckets=8 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=1048576000 -XX:MarkStackSize=4194304 -XX:MaxHeapSize=16710107136 -XX:MaxNewSize=10024386560 -XX:MinHeapDeltaBytes=8388608 -XX:MinHeapSize=8388608 -XX:NonNMethodCodeHeapSize=7602480 -XX:NonProfiledCodeHeapSize=122027880 -XX:ProfiledCodeHeapSize=122027880 -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:SoftMaxHeapSize=16710107136 -XX:-THPStackMitigation -XX:+UseCompressedOops -XX:+UseG1GC"
+        parser = JInfoParser()
+        parser._parse_vm_flags(flags_text)
+        self.assertEqual(parser.vm_flags["CICompilerCount"], "12")
+        self.assertEqual(parser.vm_flags["ConcGCThreads"], "4")
+
     def test_full(self):
         # Get system boot time
         with open('/proc/stat', 'r') as f:
@@ -49,5 +56,4 @@ class TestMath(unittest.TestCase):
         exe = "flibble"
         nt = ProcessInfo(13457, "java", str(datetime.fromtimestamp(launch_time)), cmdline.split(), exe, 2, "9.5")
         report = make_report(nt)
-        self.assertEqual(report["heap_max"], "2048m")
-        # print(pretty_json(report))
+        self.assertEqual(report["jvm.heap.max"], "2048m")
