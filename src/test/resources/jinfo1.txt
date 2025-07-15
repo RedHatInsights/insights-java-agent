@@ -1,0 +1,62 @@
+Java System Properties:
+#Thu Jun 12 13:13:58 CEST 2025
+java.specification.version=17
+sun.jnu.encoding=UTF-8
+java.class.path=
+java.vm.vendor=Eclipse Adoptium
+sun.arch.data.model=64
+java.vendor.url=https\://adoptium.net/
+os.name=Linux
+java.vm.specification.version=17
+sun.java.launcher=SUN_STANDARD
+user.country=GB
+sun.boot.library.path=/opt/jdk-17.0.1+12/lib
+sun.java.command=jdk.jshell/jdk.internal.jshell.tool.JShellToolProvider
+jdk.debug=release
+sun.cpu.endian=little
+user.home=/home/beevans
+user.language=en
+sun.stderr.encoding=UTF-8
+java.specification.vendor=Oracle Corporation
+java.version.date=2021-10-19
+java.home=/opt/jdk-17.0.1+12
+file.separator=/
+java.vm.compressedOopsMode=Zero based
+line.separator=\n
+sun.stdout.encoding=UTF-8
+java.specification.name=Java Platform API Specification
+java.vm.specification.vendor=Oracle Corporation
+jdk.module.main.class=jdk.internal.jshell.tool.JShellToolProvider
+jdk.module.main=jdk.jshell
+sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+java.runtime.version=17.0.1+12
+user.name=beevans
+path.separator=\:
+os.version=6.12.11-200.fc41.x86_64
+java.runtime.name=OpenJDK Runtime Environment
+file.encoding=UTF-8
+java.vm.name=OpenJDK 64-Bit Server VM
+java.vendor.version=Temurin-17.0.1+12
+java.vendor.url.bug=https\://github.com/adoptium/adoptium-support/issues
+java.io.tmpdir=/tmp
+java.version=17.0.1
+user.dir=/home/beevans
+os.arch=amd64
+java.vm.specification.name=Java Virtual Machine Specification
+application.home=/opt/jdk-17.0.1+12
+native.encoding=UTF-8
+java.library.path=/usr/java/packages/lib\:/usr/lib64\:/lib64\:/lib\:/usr/lib
+java.vm.info=mixed mode, sharing
+java.vendor=Eclipse Adoptium
+java.vm.version=17.0.1+12
+sun.io.unicode.encoding=UnicodeLittle
+java.class.version=61.0
+
+VM Flags:
+-XX:CICompilerCount=4 -XX:ConcGCThreads=3 -XX:G1ConcRefinementThreads=10 -XX:G1EagerReclaimRemSetThreshold=32 -XX:G1HeapRegionSize=4194304 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=8388608 -XX:MarkStackSize=4194304 -XX:MaxHeapSize=8350859264 -XX:MaxNewSize=5007998976 -XX:MinHeapDeltaBytes=4194304 -XX:MinHeapSize=8388608 -XX:NonNMethodCodeHeapSize=5839372 -XX:NonProfiledCodeHeapSize=122909434 -XX:ProfiledCodeHeapSize=122909434 -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:SoftMaxHeapSize=8350859264 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseFastUnorderedTimeStamps -XX:+UseG1GC 
+
+VM Arguments:
+jvm_args: -Dapplication.home=/opt/jdk-17.0.1+12 -Xms8m -Djdk.module.main=jdk.jshell 
+java_command: jdk.jshell/jdk.internal.jshell.tool.JShellToolProvider
+java_class_path (initial): <not set>
+Launcher Type: SUN_STANDARD

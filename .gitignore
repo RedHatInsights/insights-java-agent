@@ -44,6 +44,9 @@ build/
 # Maven
 target/
 
+# Python
+__pycache__
+
 # Clojure
 .cpcache/
 
