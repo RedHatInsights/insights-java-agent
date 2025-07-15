@@ -190,32 +190,33 @@ class JInfoParser:
         self.vm_arguments.clear()
         self.non_default_vm_flags.clear()
 
-    def _parse_vm_flags(self, line: str):
-        """Parses the VM flags string"""
-        # VM flags can be in format: -XX:flag=value or -XX:+flag or -XX:-flag
-        if line.startswith('-XX:'):
-            if '=' in line:
-                # Format: -XX:flag=value
-                flag_part = line[4:]  # Remove -XX:
-                key, value = flag_part.split('=', 1)
-                self.vm_flags[key.strip()] = value.strip()
-            elif line.startswith('-XX:+'):
-                # Format: -XX:+flag (enabled boolean flag)
-                flag = line[5:]  # Remove -XX:+
-                self.vm_flags[flag.strip()] = 'true'
-            elif line.startswith('-XX:-'):
-                # Format: -XX:-flag (disabled boolean flag)
-                flag = line[5:]  # Remove -XX:-
-                self.vm_flags[flag.strip()] = 'false'
-        elif line.startswith('-'):
-            # Other JVM arguments like -Xms, -Xmx, etc.
-            if '=' in line:
-                key, value = line.split('=', 1)
-                self.vm_flags[key.strip()] = value.strip()
-            else:
-                self.vm_flags[line.strip()] = 'true'
+    def _parse_vm_flags(self, raw_line: str) -> None:
+        flags = raw_line.split()
+        for flag in flags:
+            # VM flags can be in format: -XX:flag=value or -XX:+flag or -XX:-flag
+            if flag.startswith('-XX:'):
+                if '=' in flag:
+                    # Format: -XX:flag=value
+                    flag_part = flag[4:]  # Remove -XX:
+                    key, value = flag_part.split('=', 1)
+                    self.vm_flags[key.strip()] = value.strip()
+                elif flag.startswith('-XX:+'):
+                    # Format: -XX:+flag (enabled boolean flag)
+                    flag = flag[5:]  # Remove -XX:+
+                    self.vm_flags[flag.strip()] = 'true'
+                elif flag.startswith('-XX:-'):
+                    # Format: -XX:-flag (disabled boolean flag)
+                    flag = flag[5:]  # Remove -XX:-
+                    self.vm_flags[flag.strip()] = 'false'
+            elif flag.startswith('-'):
+                # Other JVM arguments like -Xms, -Xmx, etc.
+                if '=' in flag:
+                    key, value = flag.split('=', 1)
+                    self.vm_flags[key.strip()] = value.strip()
+                else:
+                    self.vm_flags[flag.strip()] = 'true'
 
-    def _parse_non_default_flag_line(self, line: str):
+    def _parse_non_default_flag_line(self, line: str) -> None:
         """Parse non-default VM flags"""
         # Usually in format: flag=value or flag
         if '=' in line:
@@ -375,14 +376,15 @@ def jinfo_to_dict(jinfo_txt):
     # vm_flags can be parsed to produce heap_max and heap_min
     # vm_arguments may contain java_class_path
 
-    return {"method": "jinfo", \
-            "vm_flags": jvm_info.vm_flags, "vm_arguments": jvm_info.vm_arguments, \
-            "major_version": jvm_info.system_properties['java.specification.version'], \
-            "vendor": jvm_info.system_properties['java.vm.vendor'], \
-            "java_vm_name": jvm_info.system_properties['java.vm.name'], \
-            "kernel_version": jvm_info.system_properties['os.version'], \
-            "os_arch": jvm_info.system_properties['os.arch'], \
-            "version_string": jvm_info.system_properties['java.runtime.version']}
+    return {"method": "jinfo",
+            "jvm.flags": jvm_info.vm_flags,
+            # "jvm.arguments": jvm_info.vm_arguments,
+            "java.major.version": jvm_info.system_properties['java.specification.version'],
+            "vendor": jvm_info.system_properties['java.vm.vendor'],
+            "java.vm.name": jvm_info.system_properties['java.vm.name'],
+            "kernel.version": jvm_info.system_properties['os.version'],
+            "system.arch": jvm_info.system_properties['os.arch'],
+            "version.string": jvm_info.system_properties['java.runtime.version']}
 
 def version_to_dict(output):
     # "raw": output
@@ -561,11 +563,11 @@ def get_java_memory(cmdline):
 
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
-    d = {'java_class_path': get_classpath(nt.cmdline), 'name': nt.exe,
-            'launch_time': nt.launch_time, 'rhel_version': nt.rhel_version,
+    d = {'java.class.path': get_classpath(nt.cmdline), 'name': nt.exe,
+            'launch.time': nt.launch_time, 'rhel.version': nt.rhel_version,
          'processors': nt.processors }
-    (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
-    (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
+    (d['jvm.heap.min'], d['jvm.heap.max']) = get_java_memory(nt.cmdline)
+    (d['jvm.args'], d['jboss.version']) = get_java_args(nt.cmdline)
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
@@ -581,7 +583,7 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
             report = {"version" : "1.0.2", "psdata": make_report(p)}
-            report['psdata']['hostname'] = hostname
+            report['psdata']['system.hostname'] = hostname
             # Compute SHA256 hash of the report contents
             json_output = pretty_json(report)
             content_hash = hashlib.sha256(json_output.encode('utf-8')).hexdigest()
