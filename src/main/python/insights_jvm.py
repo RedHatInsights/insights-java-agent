@@ -7,7 +7,6 @@ that we have read access to. The disadvantages of this route include
 needing to parse the hsperfdata format.
 """
 
-import time
 import os
 import re
 import subprocess
@@ -574,6 +573,7 @@ def make_report(nt):
 if __name__ == '__main__':
     proc = ProcUtil()
 
+    hostname = os.uname()[1]
     processes = proc.get_processes()
     for p in processes:
         if p.exe is None:
@@ -581,6 +581,7 @@ if __name__ == '__main__':
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
             report = {"version" : "1.0.2", "psdata": make_report(p)}
+            report['psdata']['hostname'] = hostname
             # Compute SHA256 hash of the report contents
             json_output = pretty_json(report)
             content_hash = hashlib.sha256(json_output.encode('utf-8')).hexdigest()
