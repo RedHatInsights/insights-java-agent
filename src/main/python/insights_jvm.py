@@ -64,23 +64,18 @@ class ProcUtil:
             return None
 
         # Extract relevant fields
+        # Field 22 is starttime (in clock ticks since boot)
         name = stat_fields[1].strip('()')
+        launch_time = self.get_process_launch_time(stat_fields)
 
         cmdline = self.get_process_cmdline(p_id)
         exe = self.get_process_exe(p_id)
-        launch_time = self.get_process_launch_time(p_id)
 
         return ProcessInfo(p_id, name, launch_time, cmdline, exe, self.processors, self.rhel_version)
 
-    def get_process_launch_time(self, pid):
-        """Retrieve the process start time"""
+    def get_process_launch_time(self, stat_fields):
         try:
-            # Read /proc/[pid]/stat
-            with open(f'/proc/{pid}/stat', 'r') as f:
-                stat_data = f.read().split()
-
-            # Field 22 is starttime (in clock ticks since boot)
-            starttime_ticks = int(stat_data[21])
+            starttime_ticks = int(stat_fields[21])
 
             # Get system boot time
             with open('/proc/stat', 'r') as f:
@@ -175,7 +170,7 @@ class JInfoParser:
                     key, value = line.split('=', 1)
                     self.system_properties[key.strip()] = value.strip()
             elif current_section == 'flags':
-                self._parse_flag_line(line)
+                self._parse_vm_flags(line)
             elif current_section == 'arguments':
                 if line and not line.startswith('jvm_args:'):
                     self.vm_arguments.append(line.strip())
@@ -196,8 +191,8 @@ class JInfoParser:
         self.vm_arguments.clear()
         self.non_default_vm_flags.clear()
 
-    def _parse_flag_line(self, line: str):
-        """Parse a VM flag line"""
+    def _parse_vm_flags(self, line: str):
+        """Parses the VM flags string"""
         # VM flags can be in format: -XX:flag=value or -XX:+flag or -XX:-flag
         if line.startswith('-XX:'):
             if '=' in line:
@@ -241,7 +236,7 @@ def convert_namedtuples(obj):
         return [convert_namedtuples(item) for item in obj]
     return obj
 
-def _escape_json_string(s):
+def _escape_json_string(s) -> str:
     """Escape special characters in JSON strings."""
     if not isinstance(s, str):
         return str(s)
@@ -256,7 +251,7 @@ def _escape_json_string(s):
     s = s.replace('\f', '\\f')
     return s
 
-def _serialize_json(obj, indent=0, sort_keys=True):
+def _serialize_json(obj, indent=0, sort_keys=True) -> str:
     """Custom JSON serializer without using json module."""
     indent_str = '  ' * indent
     next_indent_str = '  ' * (indent + 1)
@@ -291,20 +286,13 @@ def _serialize_json(obj, indent=0, sort_keys=True):
         # Fallback for other types
         return f'"{_escape_json_string(str(obj))}"'
 
-def pretty_json(nt):
-    """Convert named tuple (with potential nesting) to pretty JSON."""
+def pretty_json(nt) -> str:
     converted = convert_namedtuples(nt)
     return _serialize_json(converted, indent=0, sort_keys=True)
 
-def compute_sha256_hash(content):
-    """Compute SHA256 hash of string content."""
-    if isinstance(content, str):
-        content = content.encode('utf-8')
-    return hashlib.sha256(content).hexdigest()
-
 # Misc helper methods
 
-def find_jinfo_binary(java_executable_path):
+def find_jinfo_binary(java_executable_path: str) -> str:
     """
     Find the jinfo binary in the same directory as the Java executable.
 
@@ -522,6 +510,7 @@ def get_classpath(cmdline):
     return ""
 
 def get_java_args(args):
+    """Retrieve general flags, sanitizing as we go"""
     jboss_home = ""
     out = ""
     it_args = iter(args[1:-1])
@@ -536,8 +525,6 @@ def get_java_args(args):
                 if not '=' in item:
                     continue
                 (d_key, value, *foo) = item.split('=')
-                # print(len(foo))
-                # print(d_key)
                 if d_key.startswith('-Djboss.home.dir'):
                     jboss_home = value
                 else:
@@ -549,8 +536,8 @@ def get_java_args(args):
 
     if jboss_home:
         try:
-            with open(f'{jboss_home}/version.txt', 'r') as f:
-                jboss_version = f.read().strip()
+            with open(f'{jboss_home}/version.txt', 'r') as f_version:
+                jboss_version = f_version.read().strip()
         except (IOError, OSError):
             return out, ""
         return out, jboss_version
@@ -575,11 +562,11 @@ def get_java_memory(cmdline):
 
 def make_report(nt):
     """Convert Named Tuple to Report Dictionary"""
-    d = {"java_class_path": get_classpath(nt.cmdline), "name": nt.exe, \
-            "launch_time": nt.launch_time}
+    d = {'java_class_path': get_classpath(nt.cmdline), 'name': nt.exe,
+            'launch_time': nt.launch_time, 'rhel_version': nt.rhel_version,
+         'processors': nt.processors }
     (d['heap_min'], d['heap_max']) = get_java_memory(nt.cmdline)
     (d['jvm_args'], d['jboss_version']) = get_java_args(nt.cmdline)
-    (d['rhel_version'], d['processors']) = (nt.rhel_version, nt.processors)
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
@@ -596,7 +583,7 @@ if __name__ == '__main__':
             report = {"version" : "1.0.2", "psdata": make_report(p)}
             # Compute SHA256 hash of the report contents
             json_output = pretty_json(report)
-            content_hash = compute_sha256_hash(json_output)
+            content_hash = hashlib.sha256(json_output.encode('utf-8')).hexdigest()
             
             # Write report to file using SHA256 hash as filename
             output_dir = "/var/tmp/insights-runtimes/uploads"
