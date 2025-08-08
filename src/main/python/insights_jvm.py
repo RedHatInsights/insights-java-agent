@@ -323,7 +323,7 @@ def run_jinfo(jinfo_path, pid):
     """
     try:
         # Run jinfo with verbose flag to get more information
-        result = subprocess.run([jinfo_path, '-v', str(pid)],
+        result = subprocess.run([jinfo_path, str(pid)],
                               capture_output=True,
                               text=True,
                               timeout=10)
