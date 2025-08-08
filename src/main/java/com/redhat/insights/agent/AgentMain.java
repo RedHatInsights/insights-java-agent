@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023-2024 */
+/* Copyright (C) Red Hat 2023-2025 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.InsightsException;
@@ -52,10 +52,6 @@ public final class AgentMain {
       loaded = true;
     }
 
-    if (agentArgs == null || agentArgs.isEmpty()) {
-      logger.error("Unable to start Red Hat Insights agent: Need config arguments");
-      return;
-    }
     Optional<AgentConfiguration> oArgs = parseArgs(agentArgs);
     if (!oArgs.isPresent()) {
       return;
@@ -130,15 +126,17 @@ public final class AgentMain {
    */
   static Optional<AgentConfiguration> parseArgs(String agentArgs) {
     Map<String, String> out = new HashMap<>();
-    for (String pair : agentArgs.split(";")) {
-      String[] kv = pair.split("=");
-      if (kv.length != 2) {
-        logger.error(
-            "Unable to start Red Hat Insights agent: Malformed config arguments (should be"
-                + " key-value pairs)");
-        return Optional.empty();
+    if (agentArgs != null && !agentArgs.isEmpty()) {
+      for (String pair : agentArgs.split(";")) {
+        String[] kv = pair.split("=");
+        if (kv.length != 2) {
+          logger.error(
+              "Unable to start Red Hat Insights agent: Malformed config arguments (should be"
+                  + " key-value pairs)");
+          return Optional.empty();
+        }
+        out.put(kv[0], kv[1]);
       }
-      out.put(kv[0], kv[1]);
     }
     AgentConfiguration config = new AgentConfiguration(out);
 

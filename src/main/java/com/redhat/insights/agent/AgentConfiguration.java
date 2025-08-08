@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023-2024 */
+/* Copyright (C) Red Hat 2023-2025 */
 package com.redhat.insights.agent;
 
 import com.redhat.insights.config.EnvAndSysPropsInsightsConfiguration;
@@ -26,6 +26,10 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   static final String AGENT_ARG_SHOULD_DEFER = "should_defer";
   static final String AGENT_ARG_POD_NAME = "pod_name";
   static final String AGENT_ARG_POD_NAMESPACE = "pod_namespace";
+
+  static final String ENV_POD_NAME = "RHT_INSIGHTS_JAVA_AGENT_POD_NAME";
+  static final String ENV_POD_NAMESPACE = "RHT_INSIGHTS_JAVA_AGENT_POD_NAMESPACE";
+  static final String ENV_DEBUG = "RHT_INSIGHTS_JAVA_AGENT_DEBUG";
 
   static final String PROPERTY_NOT_GIVEN_DEFAULT = "[NONE]";
   private final Map<String, String> args;
@@ -130,7 +134,11 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   // Agent specific configuration
 
   public boolean isDebug() {
-    return TRUE.equalsIgnoreCase(args.getOrDefault(AGENT_ARG_DEBUG, FALSE));
+    String value = lookup(ENV_DEBUG);
+    if (value == null) {
+      value = args.getOrDefault(AGENT_ARG_DEBUG, FALSE);
+    }
+    return TRUE.equalsIgnoreCase(value);
   }
 
   // See https://issues.redhat.com/browse/MWTELE-93 for more information
@@ -149,10 +157,26 @@ public final class AgentConfiguration extends EnvAndSysPropsInsightsConfiguratio
   }
 
   public String getPodNamespace() {
+    String value = lookup(ENV_POD_NAMESPACE);
+    if (value != null) {
+      return value;
+    }
     return args.getOrDefault(AGENT_ARG_POD_NAMESPACE, PROPERTY_NOT_GIVEN_DEFAULT);
   }
 
   public String getPodName() {
+    String value = lookup(ENV_POD_NAME);
+    if (value != null) {
+      return value;
+    }
     return args.getOrDefault(AGENT_ARG_POD_NAME, PROPERTY_NOT_GIVEN_DEFAULT);
+  }
+
+  private String lookup(String env) {
+    String value = System.getenv(env);
+    if (value == null) {
+      value = System.getProperty(env.toLowerCase().replace('_', '.'));
+    }
+    return value;
   }
 }
