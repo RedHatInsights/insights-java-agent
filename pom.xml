@@ -77,7 +77,7 @@
     <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
     <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.6.2</maven-javadoc-plugin.version>
-    <jreleaser-maven-plugin.version>1.9.0</jreleaser-maven-plugin.version>
+    <jreleaser-maven-plugin.version>1.19.0</jreleaser-maven-plugin.version>
 
     <shade.prefix>com.redhat.insights.agent.shaded</shade.prefix>
   </properties>
@@ -645,15 +645,23 @@
                 </signing>
                 <deploy>
                   <maven>
+                    <mavenCentral>
+                      <release-deploy>
+                        <active>RELEASE</active>
+                        <url>https://central.sonatype.com/api/v1/publisher</url>
+                        <stagingRepositories>target/staging-deploy</stagingRepositories>
+                      </release-deploy>
+                    </mavenCentral>
                     <nexus2>
-                      <maven-central>
-                        <active>ALWAYS</active>
-                        <url>https://oss.sonatype.org/service/local</url>
-                        <snapshotUrl>https://oss.sonatype.org/content/repositories/snapshots/</snapshotUrl>
+                      <snapshot-deploy>
+                        <active>SNAPSHOT</active>
+                        <snapshotUrl>https://central.sonatype.com/repository/maven-snapshots/</snapshotUrl>
+                        <applyMavenCentralRules>true</applyMavenCentralRules>
+                        <snapshotSupported>true</snapshotSupported>
                         <closeRepository>true</closeRepository>
                         <releaseRepository>true</releaseRepository>
                         <stagingRepositories>target/staging-deploy</stagingRepositories>
-                      </maven-central>
+                      </snapshot-deploy>
                     </nexus2>
                   </maven>
                 </deploy>
