@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2023-2024 */
+/* Copyright (C) Red Hat 2023-2025 */
 package com.redhat.insights.agent;
 
 import static com.redhat.insights.InsightsErrorCode.*;
@@ -11,23 +11,31 @@ import com.redhat.insights.reports.InsightsReport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
-import org.apache.http.HttpHost;
-import org.apache.http.ParseException;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.entity.mime.HttpMultipartMode;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.util.TimeValue;
 
 public final class InsightsAgentHttpClient implements InsightsHttpClient {
   private static final InsightsLogger logger = AgentLogger.getLogger();
@@ -81,25 +89,33 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
     int delay = (int) configuration.getHttpClientTimeout().toMillis();
     RequestConfig requestConfig =
         RequestConfig.custom()
-            .setConnectionRequestTimeout(delay)
-            .setConnectTimeout(delay)
-            .setSocketTimeout(delay)
+            .setConnectionRequestTimeout(delay, TimeUnit.MILLISECONDS)
+            .setConnectTimeout(delay, TimeUnit.MILLISECONDS)
+            .setResponseTimeout(delay, TimeUnit.MILLISECONDS)
             .build();
     clientBuilder.setDefaultRequestConfig(requestConfig);
     if (configuration.getProxyConfiguration().isPresent()) {
       InsightsConfiguration.ProxyConfiguration conf = configuration.getProxyConfiguration().get();
       clientBuilder.setRoutePlanner(
-          new DefaultProxyRoutePlanner(new HttpHost(conf.getHost(), conf.getPort(), "http")));
+          new DefaultProxyRoutePlanner(new HttpHost("http", conf.getHost(), conf.getPort())));
     }
-    clientBuilder.setRetryHandler(
-        new DefaultHttpRequestRetryHandler(configuration.getHttpClientRetryMaxAttempts(), true));
+    clientBuilder.setRetryStrategy(
+        new DefaultHttpRequestRetryStrategy(
+            configuration.getHttpClientRetryMaxAttempts(), TimeValue.ofSeconds(1)));
     if (useMTLS) {
-      if (sslContextSupplier.get() == null) {
+      SSLContext sslContext = sslContextSupplier.get();
+      if (sslContext == null) {
         return;
       }
-      clientBuilder.setSSLContext(sslContextSupplier.get());
+      SSLConnectionSocketFactory sslSocketFactory =
+          new SSLConnectionSocketFactory(sslContext, new DefaultHostnameVerifier());
+      RegistryBuilder<ConnectionSocketFactory> socketFactoryRegistryBuilder =
+          RegistryBuilder.<ConnectionSocketFactory>create().register("https", sslSocketFactory);
+      HttpClientConnectionManager connMan =
+          new BasicHttpClientConnectionManager(socketFactoryRegistryBuilder.build());
+      clientBuilder.setConnectionManager(connMan);
     } else {
-      clientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+      // clientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
     }
     try (CloseableHttpClient client = clientBuilder.build()) {
       HttpPost post;
@@ -110,17 +126,17 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
       }
       post.setHeader("Cache-Control", "no-store");
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-      builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+      builder.setMode(HttpMultipartMode.LEGACY);
       builder.addBinaryBody("file", bytes, GENERAL_CONTENT_TYPE, filename);
       builder.addTextBody("type", GENERAL_MIME_TYPE);
       post.setEntity(builder.build());
       try (CloseableHttpResponse response = client.execute(post)) {
         logger.debug(
             "Red Hat Insights HTTP Client: status="
-                + response.getStatusLine()
+                + new StatusLine(response)
                 + ", body="
                 + EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-        switch (response.getStatusLine().getStatusCode()) {
+        switch (response.getCode()) {
           case 201:
             logger.debug(
                 "Red Hat Insights - Advisor content type with no metadata accepted for"
@@ -130,19 +146,17 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
             logger.debug("Red Hat Insights - Payload was accepted for processing");
             break;
           case 401:
-            throw new InsightsException(
-                ERROR_HTTP_SEND_AUTH_ERROR, response.getStatusLine().getReasonPhrase());
+            throw new InsightsException(ERROR_HTTP_SEND_AUTH_ERROR, response.getReasonPhrase());
           case 413:
-            throw new InsightsException(
-                ERROR_HTTP_SEND_PAYLOAD, response.getStatusLine().getReasonPhrase());
+            throw new InsightsException(ERROR_HTTP_SEND_PAYLOAD, response.getReasonPhrase());
           case 415:
             throw new InsightsException(
-                ERROR_HTTP_SEND_INVALID_CONTENT_TYPE, response.getStatusLine().getReasonPhrase());
+                ERROR_HTTP_SEND_INVALID_CONTENT_TYPE, response.getReasonPhrase());
           case 500:
           case 503:
           default:
             throw new InsightsException(
-                ERROR_HTTP_SEND_SERVER_ERROR, response.getStatusLine().toString());
+                ERROR_HTTP_SEND_SERVER_ERROR, new StatusLine(response).toString());
         }
       }
     } catch (IOException | ParseException ioex) {
