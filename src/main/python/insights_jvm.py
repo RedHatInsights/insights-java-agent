@@ -10,6 +10,7 @@ needing to parse the hsperfdata format.
 import os
 import re
 import subprocess
+import sys
 import glob
 import hashlib
 from collections import namedtuple
@@ -62,8 +63,6 @@ class ProcUtil:
         if len(stat_fields) < 24:
             return None
 
-        # Extract relevant fields
-        # Field 22 is starttime (in clock ticks since boot)
         name = stat_fields[1].strip('()')
         launch_time = self.get_process_launch_time(stat_fields)
 
@@ -74,6 +73,7 @@ class ProcUtil:
 
     def get_process_launch_time(self, stat_fields):
         try:
+            # Field 22 is starttime (in clock ticks since boot)
             starttime_ticks = int(stat_fields[21])
 
             # Get system boot time
@@ -88,7 +88,7 @@ class ProcUtil:
 
             # Calculate process start time
             start_time = boot_time + (starttime_ticks / clock_ticks)
-            return str(datetime.fromtimestamp(start_time))
+            return str(start_time)
 
         except (FileNotFoundError, IndexError, ValueError):
             return None
@@ -571,11 +571,32 @@ def make_report(nt):
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
-# Main script
+# Main script block
 if __name__ == '__main__':
     proc = ProcUtil()
 
+    if not os.path.isdir(f'/proc/'):
+        print("This script is only intended to run on Linux systems.")
+        sys.exit(1)
+
     hostname = os.uname()[1]
+
+    if len(sys.argv) > 2:
+        print(f"Usage: {sys.argv[0]} [pid]")
+        sys.exit(1)
+
+    if len(sys.argv) == 2:
+        try:
+            pid = int(sys.argv[1])
+        except ValueError:
+            print(f"Invalid PID: {sys.argv[1]}")
+            sys.exit(1)
+
+        process = proc.get_process_info(pid)
+        processes = [process] if process else []
+    else:
+        processes = proc.get_processes()
+
     processes = proc.get_processes()
     for p in processes:
         if p.exe is None:
