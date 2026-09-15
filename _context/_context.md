@@ -190,3 +190,63 @@ Single workflow: `.github/workflows/release.yaml` — manual release only. No se
 | [`release.sh`](../release.sh) | Release staging + JReleaser |
 | [`.github/workflows/release.yaml`](../.github/workflows/release.yaml) | GitHub Actions release |
 | [`STYLE.md`](../STYLE.md) | Code style guide |
+
+## Open Pull Requests
+
+*Scraped from [RedHatInsights/insights-java-agent](https://github.com/RedHatInsights/insights-java-agent) — 2 open PRs, 0 open issues.*
+
+### PR #49 — Upgrade Apache httpcomponents.httpclient to httpclient5
+
+| Field | Value |
+|---|---|
+| **Author** | andrewazores (Andrew Azores) |
+| **Branch** | `httpclient5` → `main` |
+| **Status** | **Draft** — no reviews requested |
+| **Opened** | 2025-12-16 |
+| **Mergeable** | Yes |
+
+**Changed files:**
+- `pom.xml` (+10 / -20) — dependency swap from httpclient 4.x to httpclient5
+- `src/main/java/.../InsightsAgentHttpClient.java` (+48 / -34) — API migration
+- `src/test/java/.../InsightsAgentHttpClientTest.java` (+2 / -2) — test adjustments
+
+**Commits:**
+1. `Upgrade Apache httpcomponents.httpclient to httpclient5`
+2. `fixup! Upgrade Apache httpcomponents.httpclient to httpclient5`
+
+**Notes:** Draft PR. No description. Upgrades from Apache HttpClient 4.5.x to HttpClient 5.x (significant API break — `CloseableHttpClient`, `RequestBuilder`, etc. change substantially).
+
+---
+
+### PR #48 — Provide extensibility mechanism where additional subreports can be added
+
+| Field | Value |
+|---|---|
+| **Author** | mstruk (Marko Strukelj) |
+| **Branch** | `extensibility` → `main` |
+| **Status** | Open — no reviews requested |
+| **Opened** | 2025-10-02 |
+| **Mergeable** | Yes |
+
+**Description:**  
+An API interface `com.redhat.insights.agent.api.SubreportProvider` is defined. Implementations are discovered at runtime via the `ServiceLoader` pattern. A custom agent project can depend on `insights-java-agent` and provide custom `InsightsSubreport` implementations via a `SubreportProvider`. Custom agent projects can use the same shading strategy to produce a fully bundled agent archive.
+
+**Changed files:**
+- `pom.xml` (+1 / -1)
+- `src/main/java/.../AgentBasicReport.java` (+28 / -1) — loads `SubreportProvider` via ServiceLoader
+- `src/main/java/.../AgentMain.java` (+10 / -0) — race condition fix for `premain`/`main` handoff
+- `src/main/java/.../api/SubreportProvider.java` (+13 / -0) — new SPI interface
+
+**Commits:**
+1. `Continue development`
+2. `Add subreport extension mechanism` — ServiceLoader-based extension via `SubreportProvider`
+3. `Address a race condition in handoff between agent premain() and application Main.main()`
+
+**Notes:** Ready for review (not draft). Introduces a new `api` sub-package and SPI extension point. Also fixes a concurrency bug in agent startup.
+
+---
+
+## Open Issues
+
+*No open issues as of 2025-12-16.*
+
