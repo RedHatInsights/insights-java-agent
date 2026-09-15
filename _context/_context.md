@@ -249,4 +249,3 @@ An API interface `com.redhat.insights.agent.api.SubreportProvider` is defined. I
 ## Open Issues
 
 *No open issues as of 2025-12-16.*
-
