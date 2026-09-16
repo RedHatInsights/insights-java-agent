@@ -53,3 +53,6 @@ __pycache__
 # tmp
 tmp/
 /api/nbproject/
+
+# Bob
+.bob/
