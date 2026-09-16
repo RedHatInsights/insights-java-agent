@@ -7,36 +7,42 @@ that we have read access to. The disadvantages of this route include
 needing to parse the hsperfdata format.
 """
 
+import glob
+import hashlib
 import json
 import os
 import re
 import subprocess
-import glob
-import hashlib
+import sys
 from collections import namedtuple
-from datetime import datetime
-from typing import Dict, List
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Named tuples for structured data
-ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'launch_time', 'cmdline', 'exe', 'processors', 'rhel_version'])
+ProcessInfo = namedtuple(
+    'ProcessInfo',
+    ['pid', 'name', 'launch_time', 'cmdline', 'exe', 'processors', 'rhel_version'],
+)
+
 
 class ProcUtil:
-    """Simple class to replace psutil functionality """
-    def __init__(self):
-        self.rhel_version = self._read_file('/etc/redhat-release')
-        self.processors = os.cpu_count()
+    """Simple class to replace psutil functionality"""
 
-    def _read_file(self, filepath):
+    def __init__(self) -> None:
+        self.rhel_version: Optional[str] = self._read_file('/etc/redhat-release')
+        self.processors: Optional[int] = os.cpu_count()
+
+    def _read_file(self, filepath: str) -> Optional[str]:
         try:
             with open(filepath, 'r') as f:
                 return f.read().strip()
         except (IOError, OSError):
             return None
 
-    def get_pids(self):
+    def get_pids(self) -> List[int]:
         """Get list of all process IDs"""
-        _pids = []
+        _pids: List[int] = []
         for pid_dir in glob.glob('/proc/[0-9]*'):
             try:
                 pid = int(os.path.basename(pid_dir))
@@ -45,11 +51,11 @@ class ProcUtil:
                 continue
         return sorted(_pids)
 
-    def pid_exists(self, p_id):
+    def pid_exists(self, p_id: int) -> bool:
         """Check if a process ID exists"""
         return os.path.isdir(f'/proc/{p_id}')
 
-    def get_process_info(self, p_id):
+    def get_process_info(self, p_id: int) -> Optional[ProcessInfo]:
         """Get detailed information about a process"""
         if not self.pid_exists(p_id):
             return None
@@ -68,8 +74,8 @@ class ProcUtil:
         if rparen_idx == -1 or lparen_idx == -1 or lparen_idx >= rparen_idx:
             return None
 
-        name = stat_content[lparen_idx + 1:rparen_idx]
-        rest_fields = stat_content[rparen_idx + 1:].split()
+        name = stat_content[lparen_idx + 1 : rparen_idx]
+        rest_fields = stat_content[rparen_idx + 1 :].split()
         # Field 22 (starttime) in 1-based index corresponds to index 19 in rest_fields (22 - 3 = 19)
         if len(rest_fields) < 20:
             return None
@@ -79,9 +85,19 @@ class ProcUtil:
         cmdline = self.get_process_cmdline(p_id)
         exe = self.get_process_exe(p_id)
 
-        return ProcessInfo(p_id, name, launch_time, cmdline, exe, self.processors, self.rhel_version)
+        return ProcessInfo(
+            p_id,
+            name,
+            launch_time,
+            cmdline,
+            exe,
+            self.processors,
+            self.rhel_version,
+        )
 
-    def get_process_launch_time(self, starttime_ticks_val):
+    def get_process_launch_time(
+        self, starttime_ticks_val: Union[int, str, List[Any], Tuple[Any, ...]]
+    ) -> Optional[str]:
         try:
             #! Change justification: Handle starttime ticks passed directly or as stat_fields list/tuple.
             #! Supports both field value directly and legacy list/tuple parameter.
@@ -91,7 +107,7 @@ class ProcUtil:
                 starttime_ticks = int(starttime_ticks_val)
 
             # Get system boot time
-            boot_time = None
+            boot_time: Optional[int] = None
             with open('/proc/stat', 'r') as f:
                 for line in f:
                     if line.startswith('btime'):
@@ -111,7 +127,7 @@ class ProcUtil:
         except (FileNotFoundError, IndexError, ValueError, KeyError, OSError):
             return None
 
-    def get_process_cmdline(self, pid):
+    def get_process_cmdline(self, pid: int) -> List[str]:
         """Get process command line arguments"""
         cmdline_content = self._read_file(f'/proc/{pid}/cmdline')
         if not cmdline_content:
@@ -122,16 +138,16 @@ class ProcUtil:
         args = [arg for arg in cmdline_content.split('\x00') if arg]
         return args
 
-    def get_process_exe(self, pid):
+    def get_process_exe(self, pid: int) -> Optional[str]:
         """Get process executable path"""
         try:
             return os.readlink(f'/proc/{pid}/exe')
         except (OSError, IOError):
             return None
 
-    def get_processes(self):
+    def get_processes(self) -> List[ProcessInfo]:
         """Get information about all processes"""
-        _processes = []
+        _processes: List[ProcessInfo] = []
         for pid in self.get_pids():
             proc_info = self.get_process_info(pid)
             if proc_info:
@@ -262,7 +278,7 @@ def pretty_json(nt) -> str:
 
 # Misc helper methods
 
-def find_jinfo_binary(java_executable_path: str) -> str:
+def find_jinfo_binary(java_executable_path: str) -> Optional[str]:
     """
     Find the jinfo binary in the same directory as the Java executable.
 
@@ -270,7 +286,7 @@ def find_jinfo_binary(java_executable_path: str) -> str:
         java_executable_path (str): Path to the Java executable
 
     Returns:
-        str: Path to jinfo binary or None if not found
+        Optional[str]: Path to jinfo binary or None if not found
     """
     java_dir = os.path.dirname(java_executable_path)
     #! Change justification: Fix Bug 5 (incorrect variable name jps_path -> jinfo_path).
@@ -282,7 +298,8 @@ def find_jinfo_binary(java_executable_path: str) -> str:
 
     return None
 
-def run_jinfo(jinfo_path, pid):
+
+def run_jinfo(jinfo_path: str, pid: int) -> Tuple[bool, str]:
     """
     Execute jinfo command to get Java process information.
 
@@ -291,14 +308,16 @@ def run_jinfo(jinfo_path, pid):
         pid (int): Process ID
 
     Returns:
-        tuple: (success, output)
+        Tuple[bool, str]: (success, output)
     """
     try:
         # Run jinfo with verbose flag to get more information
-        result = subprocess.run([jinfo_path, str(pid)],
-                              capture_output=True,
-                              text=True,
-                              timeout=10)
+        result = subprocess.run(
+            [jinfo_path, str(pid)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
         if result.returncode == 0:
             return True, result.stdout
@@ -314,7 +333,8 @@ def run_jinfo(jinfo_path, pid):
     except Exception as e:
         return False, f"Error running jinfo: {e}"
 
-def run_java_version(java_executable_path):
+
+def run_java_version(java_executable_path: str) -> Tuple[bool, str]:
     """
     Execute java -version command to get basic Java information.
 
@@ -322,13 +342,15 @@ def run_java_version(java_executable_path):
         java_executable_path (str): Path to java executable
 
     Returns:
-        tuple: (success, output)
+        Tuple[bool, str]: (success, output)
     """
     try:
-        result = subprocess.run([java_executable_path, '-version'],
-                              capture_output=True,
-                              text=True,
-                              timeout=10)
+        result = subprocess.run(
+            [java_executable_path, '-version'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
         # java -version outputs to stderr by default
         output = result.stderr if result.stderr else result.stdout
@@ -344,7 +366,7 @@ def run_java_version(java_executable_path):
         return False, f"Error running java -version: {e}"
 
 
-def jinfo_to_dict(jinfo_txt):
+def jinfo_to_dict(jinfo_txt: str) -> Dict[str, Any]:
     """Processes output from jinfo into a dict"""
     parser = JInfoParser()
     jvm_info = parser.parse_output(jinfo_txt)
@@ -354,19 +376,22 @@ def jinfo_to_dict(jinfo_txt):
 
     #! Change justification: Fix Bug 4 (use dict.get instead of direct indexing to prevent KeyError on missing properties).
     #! No automated test covers missing system properties in jinfo output; change required to prevent unhandled KeyError crashes.
-    return {"method": "jinfo",
-            "jvm.flags": jvm_info.vm_flags,
-            # "jvm.arguments": jvm_info.vm_arguments,
-            "java.major.version": jvm_info.system_properties.get('java.specification.version', ''),
-            "vendor": jvm_info.system_properties.get('java.vm.vendor', ''),
-            "java.vm.name": jvm_info.system_properties.get('java.vm.name', ''),
-            "kernel.version": jvm_info.system_properties.get('os.version', ''),
-            "system.arch": jvm_info.system_properties.get('os.arch', ''),
-            "version.string": jvm_info.system_properties.get('java.runtime.version', '')}
+    return {
+        "method": "jinfo",
+        "jvm.flags": jvm_info.vm_flags,
+        # "jvm.arguments": jvm_info.vm_arguments,
+        "java.major.version": jvm_info.system_properties.get('java.specification.version', ''),
+        "vendor": jvm_info.system_properties.get('java.vm.vendor', ''),
+        "java.vm.name": jvm_info.system_properties.get('java.vm.name', ''),
+        "kernel.version": jvm_info.system_properties.get('os.version', ''),
+        "system.arch": jvm_info.system_properties.get('os.arch', ''),
+        "version.string": jvm_info.system_properties.get('java.runtime.version', ''),
+    }
 
-def version_to_dict(output):
+
+def version_to_dict(output: str) -> Dict[str, Any]:
     # "raw": output
-    info = {"method": "version"}
+    info: Dict[str, Any] = {"method": "version"}
 
     if not output:
         return info
@@ -462,7 +487,8 @@ def version_to_dict(output):
 
     return info
 
-def get_extra_info(exe, pid):
+
+def get_extra_info(exe: str, pid: int) -> Dict[str, Any]:
     jinfo_path = find_jinfo_binary(exe)
 
     if jinfo_path:
@@ -476,7 +502,8 @@ def get_extra_info(exe, pid):
         return version_to_dict(output)
     return {}
 
-def get_classpath(cmdline):
+
+def get_classpath(cmdline: List[str]) -> str:
     """Retrieve classpath from list of Java args"""
     it_args = iter(cmdline)
     try:
@@ -488,7 +515,8 @@ def get_classpath(cmdline):
         pass
     return ""
 
-def get_java_args(args):
+
+def get_java_args(args: List[str]) -> Tuple[str, str]:
     """Retrieve general flags, sanitizing as we go"""
     jboss_home = ""
     out = ""
@@ -503,7 +531,7 @@ def get_java_args(args):
             if item in ['-classpath', '-cp']:
                 next(it_args)
             elif item.startswith('-D'):
-                if not '=' in item:
+                if '=' not in item:
                     continue
                 (d_key, value, *foo) = item.split('=')
                 if d_key.startswith('-Djboss.home.dir'):
@@ -511,7 +539,7 @@ def get_java_args(args):
                 else:
                     out += f' {d_key}=ZZZZZZZZZ'
             else:
-                out += ' '+ item
+                out += ' ' + item
     except StopIteration:
         pass
 
@@ -524,7 +552,8 @@ def get_java_args(args):
         return out, jboss_version
     return out, "Unknown"
 
-def get_java_memory(cmdline):
+
+def get_java_memory(cmdline: List[str]) -> Tuple[Optional[str], Optional[str]]:
     """Retrieve Java memory flags"""
     min_mem = None
     max_mem = None
@@ -541,42 +570,69 @@ def get_java_memory(cmdline):
         pass
     return (min_mem, max_mem)
 
-def make_report(nt):
+
+def make_report(nt: ProcessInfo) -> Dict[str, Any]:
     """Convert Named Tuple to Report Dictionary"""
-    d = {'java.class.path': get_classpath(nt.cmdline), 'name': nt.exe,
-            'launch.time': nt.launch_time, 'rhel.version': nt.rhel_version,
-         'processors': nt.processors }
+    d: Dict[str, Any] = {
+        'java.class.path': get_classpath(nt.cmdline),
+        'name': nt.exe,
+        'launch.time': nt.launch_time,
+        'rhel.version': nt.rhel_version,
+        'processors': nt.processors,
+    }
     (d['jvm.heap.min'], d['jvm.heap.max']) = get_java_memory(nt.cmdline)
     (d['jvm.args'], d['jboss.version']) = get_java_args(nt.cmdline)
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
-# Main script
-if __name__ == '__main__':
-    proc = ProcUtil()
 
+def scan_and_write_reports(
+    output_dir: str = "/var/tmp/insights-runtimes/uploads",
+) -> Tuple[int, int]:
+    """
+    Scan system for Java processes and write JSON reports.
+
+    Returns:
+        Tuple[int, int]: (count of successfully written reports, count of write errors)
+    """
+    #! Change justification: Refactor main loop into testable function with proper error tracking and stderr logging.
+    #! Test fails if file write failures are unhandled or fail silently.
+    proc = ProcUtil()
     hostname = os.uname()[1]
     processes = proc.get_processes()
+    written_count = 0
+    error_count = 0
+
     for p in processes:
         if p.exe is None:
             continue
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
-            report = {"version" : "1.0.2", "psdata": make_report(p)}
+            report = {"version": "1.0.2", "psdata": make_report(p)}
             report['psdata']['system.hostname'] = hostname
             # Compute SHA256 hash of the report contents
             json_output = pretty_json(report)
             content_hash = hashlib.sha256(json_output.encode('utf-8')).hexdigest()
-            
+
             # Write report to file using SHA256 hash as filename
-            output_dir = "/var/tmp/insights-runtimes/uploads"
             try:
                 os.makedirs(output_dir, exist_ok=True)
                 filename = f"{content_hash}_connect.json"
                 filepath = os.path.join(output_dir, filename)
-                
+
                 with open(filepath, 'w') as f:
                     f.write(json_output)
-                
+                written_count += 1
+
             except (OSError, IOError) as e:
-                print(f"Error writing report to file: {e}")
+                print(f"Error writing report to file {output_dir}: {e}", file=sys.stderr)
+                error_count += 1
+
+    return written_count, error_count
+
+
+# Main script
+if __name__ == '__main__':
+    _, errors = scan_and_write_reports()
+    if errors > 0:
+        sys.exit(1)

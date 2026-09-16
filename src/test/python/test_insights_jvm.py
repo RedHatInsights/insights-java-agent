@@ -17,7 +17,9 @@ from insights_jvm import (
     run_jinfo,
     jinfo_to_dict,
     find_jinfo_binary,
+    scan_and_write_reports,
 )
+import tempfile
 
 
 # Run with "pytest -v --capture=tee-sys ."
@@ -165,3 +167,20 @@ VM Flags:
             self.assertEqual(info.pid, 1234)
             self.assertEqual(info.exe, "/usr/bin/java")
             self.assertEqual(info.launch_time, "2026-09-16 10:00:00")
+
+    def test_scan_and_write_reports_error_handling(self):
+        #! Change justification: Verify Error Logging / Exit Codes fix (scan_and_write_reports reports error count and writes to stderr on failure).
+        #! Test fails if write errors are suppressed or error_count is not reported.
+        proc = ProcessInfo(1234, "java", "2026-09-16 12:00:00", ["-jar", "app.jar"], "/usr/bin/java", 4, "RHEL 9.2")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Point to a path inside non-writable directory to trigger OSError
+            read_only_dir = os.path.join(temp_dir, "readonly_uploads")
+            os.makedirs(read_only_dir, mode=0o400)
+            target_dir = os.path.join(read_only_dir, "nested")
+
+            with patch('insights_jvm.ProcUtil.get_processes', return_value=[proc]), \
+                 patch('sys.stderr.write') as mock_stderr:
+                written, errors = scan_and_write_reports(output_dir=target_dir)
+                self.assertEqual(written, 0)
+                self.assertEqual(errors, 1)
+                self.assertTrue(mock_stderr.called)
