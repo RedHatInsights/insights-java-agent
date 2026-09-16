@@ -18,8 +18,13 @@ from insights_jvm import (
     jinfo_to_dict,
     find_jinfo_binary,
     scan_and_write_reports,
+    get_cpus_from_proc_cpuinfo,
+    get_cgroup_cpu_quota,
+    is_containerized,
+    detect_processors,
 )
 import tempfile
+from unittest.mock import mock_open
 
 
 # Run with "pytest -v --capture=tee-sys ."
@@ -197,3 +202,60 @@ VM Flags:
                 self.assertEqual(written, 0)
                 self.assertEqual(errors, 1)
                 self.assertTrue(mock_stderr.called)
+
+    def test_proc_cpuinfo_exact_processor_key(self):
+        #! Change justification: Verify Edge Case 2 fix (only count exact 'processor' keys, not non-core descriptors).
+        #! Test fails if line prefix matching counts 'processor version' lines.
+        cpuinfo_data = """
+processor\t: 0
+model name\t: Intel(R) Core(TM)
+processor version : 1.0.0
+processor\t: 1
+core id\t\t: 0
+"""
+        with patch('builtins.open', mock_open(read_data=cpuinfo_data)):
+            cpu_count = get_cpus_from_proc_cpuinfo()
+            self.assertEqual(cpu_count, 2)
+
+    def test_fractional_cgroup_v2_cpu_quota(self):
+        #! Change justification: Verify Fractional CPU Quota handling for cgroup v2.
+        #! Test fails if 150000 100000 is integer-truncated to 1 instead of returning 1.5.
+        with patch('insights_jvm.read_file_safely', return_value="150000 100000"):
+            quota = get_cgroup_cpu_quota()
+            self.assertEqual(quota, 1.5)
+
+    def test_fractional_cgroup_v1_cpu_quota(self):
+        #! Change justification: Verify Fractional CPU Quota handling for cgroup v1.
+        #! Test fails if 50000 / 100000 is integer-truncated to 1 or 0 instead of returning 0.5.
+        def mock_read(path):
+            if path == '/sys/fs/cgroup/cpu.max':
+                return None
+            if path == '/sys/fs/cgroup/cpu/cpu.cfs_quota_us':
+                return "50000"
+            if path == '/sys/fs/cgroup/cpu/cpu.cfs_period_us':
+                return "100000"
+            return None
+
+        with patch('insights_jvm.read_file_safely', side_effect=mock_read):
+            quota = get_cgroup_cpu_quota()
+            self.assertEqual(quota, 0.5)
+
+    def test_integer_cgroup_cpu_quota_returns_int(self):
+        #! Change justification: Verify that integer CPU quotas (e.g. 200000/100000 = 2.0) return int 2.
+        #! Test fails if integer quota returns float type.
+        with patch('insights_jvm.read_file_safely', return_value="200000 100000"):
+            quota = get_cgroup_cpu_quota()
+            self.assertEqual(quota, 2)
+            self.assertIsInstance(quota, int)
+
+    def test_is_containerized_k8s_and_cgroup_slices(self):
+        #! Change justification: Verify Edge Case 3 fix (detect containers via kubepods / cgroup v2 / environ).
+        #! Test fails if environments lacking /.dockerenv or /run/.containerenv are marked bare-metal.
+        def mock_read(path):
+            if path == '/proc/self/cgroup':
+                return "0::/kubepods.slice/kubepods-burstable.slice/pod123/container456"
+            return None
+
+        with patch('os.path.exists', return_value=False), \
+             patch('insights_jvm.read_file_safely', side_effect=mock_read):
+            self.assertTrue(is_containerized())
