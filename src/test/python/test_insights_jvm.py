@@ -1,3 +1,4 @@
+import json
 import unittest
 import sys
 import os
@@ -132,3 +133,35 @@ VM Flags:
         self.assertEqual(result["java.vm.name"], "")
         self.assertEqual(result["kernel.version"], "")
         self.assertEqual(result["version.string"], "")
+
+    def test_pretty_json_standard_serialization(self):
+        #! Change justification: Verify Performance & Robustness issue 1 fix (use json module for serializing namedtuples/structures).
+        #! Test fails if pretty_json produces invalid JSON or fails on types.
+        proc = ProcessInfo(1234, "java", "2026-09-16 12:00:00", ["-jar", "app.jar"], "/usr/bin/java", 4, "RHEL 9.2")
+        payload = {"version": "1.0.2", "psdata": make_report(proc)}
+        json_str = pretty_json(payload)
+        parsed = json.loads(json_str)
+        self.assertEqual(parsed["version"], "1.0.2")
+        self.assertEqual(parsed["psdata"]["name"], "/usr/bin/java")
+        self.assertEqual(parsed["psdata"]["processors"], 4)
+
+    def test_get_process_info_with_spaces_in_comm_name(self):
+        #! Change justification: Verify Performance & Robustness issue 2 fix (/proc/pid/stat parsing with spaces/parentheses in comm).
+        #! Test fails if stat parsing splits naively on whitespace and misaligns fields.
+        proc_util = ProcUtil()
+        # stat format: pid (comm with spaces and parens (1)) state ppid ... starttime(field 22) ...
+        # Fields after ')':
+        # 3:S 4:1 5:1 6:0 7:0 8:0 9:0 10:0 11:0 12:0 13:0 14:0 15:0 16:0 17:0 18:0 19:0 20:0 21:0 22:50000 23:0 24:0
+        dummy_stat = "1234 (java worker (test)) S 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 50000 0 0"
+
+        with patch.object(proc_util, 'pid_exists', return_value=True), \
+             patch.object(proc_util, '_read_file', return_value=dummy_stat), \
+             patch.object(proc_util, 'get_process_cmdline', return_value=['java', '-jar', 'test.jar']), \
+             patch.object(proc_util, 'get_process_exe', return_value='/usr/bin/java'), \
+             patch.object(proc_util, 'get_process_launch_time', return_value='2026-09-16 10:00:00'):
+            info = proc_util.get_process_info(1234)
+            self.assertIsNotNone(info)
+            self.assertEqual(info.name, "java worker (test)")
+            self.assertEqual(info.pid, 1234)
+            self.assertEqual(info.exe, "/usr/bin/java")
+            self.assertEqual(info.launch_time, "2026-09-16 10:00:00")

@@ -7,6 +7,7 @@ that we have read access to. The disadvantages of this route include
 needing to parse the hsperfdata format.
 """
 
+import json
 import os
 import re
 import subprocess
@@ -58,30 +59,47 @@ class ProcUtil:
         if not stat_content:
             return None
 
-        stat_fields = stat_content.split()
-        if len(stat_fields) < 24:
+        #! Change justification: Robust /proc/pid/stat parsing (Performance & Robustness issue 2).
+        #! Test fails when process comm name contains spaces or parentheses (e.g. `(java worker (1))`).
+        # The comm field is enclosed in parentheses and may contain spaces/parens.
+        # Everything after the last ')' contains the remaining fields starting from field 3 (state).
+        rparen_idx = stat_content.rfind(')')
+        lparen_idx = stat_content.find('(')
+        if rparen_idx == -1 or lparen_idx == -1 or lparen_idx >= rparen_idx:
             return None
 
-        # Extract relevant fields
-        # Field 22 is starttime (in clock ticks since boot)
-        name = stat_fields[1].strip('()')
-        launch_time = self.get_process_launch_time(stat_fields)
+        name = stat_content[lparen_idx + 1:rparen_idx]
+        rest_fields = stat_content[rparen_idx + 1:].split()
+        # Field 22 (starttime) in 1-based index corresponds to index 19 in rest_fields (22 - 3 = 19)
+        if len(rest_fields) < 20:
+            return None
+
+        launch_time = self.get_process_launch_time(rest_fields[19])
 
         cmdline = self.get_process_cmdline(p_id)
         exe = self.get_process_exe(p_id)
 
         return ProcessInfo(p_id, name, launch_time, cmdline, exe, self.processors, self.rhel_version)
 
-    def get_process_launch_time(self, stat_fields):
+    def get_process_launch_time(self, starttime_ticks_val):
         try:
-            starttime_ticks = int(stat_fields[21])
+            #! Change justification: Handle starttime ticks passed directly or as stat_fields list/tuple.
+            #! Supports both field value directly and legacy list/tuple parameter.
+            if isinstance(starttime_ticks_val, (list, tuple)):
+                starttime_ticks = int(starttime_ticks_val[21])
+            else:
+                starttime_ticks = int(starttime_ticks_val)
 
             # Get system boot time
+            boot_time = None
             with open('/proc/stat', 'r') as f:
                 for line in f:
                     if line.startswith('btime'):
                         boot_time = int(line.split()[1])
                         break
+
+            if boot_time is None:
+                return None
 
             # Get clock ticks per second
             clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
@@ -90,7 +108,7 @@ class ProcUtil:
             start_time = boot_time + (starttime_ticks / clock_ticks)
             return str(datetime.fromtimestamp(start_time))
 
-        except (FileNotFoundError, IndexError, ValueError):
+        except (FileNotFoundError, IndexError, ValueError, KeyError, OSError):
             return None
 
     def get_process_cmdline(self, pid):
@@ -236,59 +254,11 @@ def convert_namedtuples(obj):
         return [convert_namedtuples(item) for item in obj]
     return obj
 
-def _escape_json_string(s) -> str:
-    """Escape special characters in JSON strings."""
-    if not isinstance(s, str):
-        return str(s)
-    
-    # Replace backslashes first to avoid double escaping
-    s = s.replace('\\', '\\\\')
-    s = s.replace('"', '\\"')
-    s = s.replace('\n', '\\n')
-    s = s.replace('\r', '\\r')
-    s = s.replace('\t', '\\t')
-    s = s.replace('\b', '\\b')
-    s = s.replace('\f', '\\f')
-    return s
-
-def _serialize_json(obj, indent=0, sort_keys=True) -> str:
-    """Custom JSON serializer without using json module."""
-    indent_str = '  ' * indent
-    next_indent_str = '  ' * (indent + 1)
-    
-    if obj is None:
-        return 'null'
-    elif isinstance(obj, bool):
-        return 'true' if obj else 'false'
-    elif isinstance(obj, (int, float)):
-        return str(obj)
-    elif isinstance(obj, str):
-        return f'"{_escape_json_string(obj)}"'
-    elif isinstance(obj, (list, tuple)):
-        if not obj:
-            return '[]'
-        items = []
-        for item in obj:
-            serialized_item = _serialize_json(item, indent + 1, sort_keys)
-            items.append(f'{next_indent_str}{serialized_item}')
-        return '[\n' + ',\n'.join(items) + f'\n{indent_str}]'
-    elif isinstance(obj, dict):
-        if not obj:
-            return '{}'
-        items = []
-        keys = sorted(obj.keys()) if sort_keys else obj.keys()
-        for key in keys:
-            serialized_key = _escape_json_string(str(key))
-            serialized_value = _serialize_json(obj[key], indent + 1, sort_keys)
-            items.append(f'{next_indent_str}"{serialized_key}": {serialized_value}')
-        return '{\n' + ',\n'.join(items) + f'\n{indent_str}' + '}'
-    else:
-        # Fallback for other types
-        return f'"{_escape_json_string(str(obj))}"'
-
+#! Change justification: Use standard library json for serialization (Performance & Robustness issue 1).
+#! Test fails if pretty_json fails to output standard RFC compliant JSON or crashes on nested structures.
 def pretty_json(nt) -> str:
     converted = convert_namedtuples(nt)
-    return _serialize_json(converted, indent=0, sort_keys=True)
+    return json.dumps(converted, indent=2, sort_keys=True)
 
 # Misc helper methods
 
