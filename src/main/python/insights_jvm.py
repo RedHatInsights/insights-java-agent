@@ -303,10 +303,12 @@ def find_jinfo_binary(java_executable_path: str) -> str:
         str: Path to jinfo binary or None if not found
     """
     java_dir = os.path.dirname(java_executable_path)
-    jps_path = os.path.join(java_dir, 'jinfo')
+    #! Change justification: Fix Bug 5 (incorrect variable name jps_path -> jinfo_path).
+    #! No automated test covers binary resolution; change required for code clarity and correctness.
+    jinfo_path = os.path.join(java_dir, 'jinfo')
 
-    if os.path.exists(jps_path) and os.access(jps_path, os.X_OK):
-        return jps_path
+    if os.path.exists(jinfo_path) and os.access(jinfo_path, os.X_OK):
+        return jinfo_path
 
     return None
 
@@ -331,12 +333,16 @@ def run_jinfo(jinfo_path, pid):
         if result.returncode == 0:
             return True, result.stdout
 
-        return False, "{result.stderr}"
+        #! Change justification: Fix Bug 1 (return actual stderr instead of literal string "{result.stderr}").
+        #! No automated test covers subprocess execution failure; change required to report actual error output.
+        return False, f"{result.stderr}"
 
     except subprocess.TimeoutExpired:
-        return False, "JPS execution timed out"
+        #! Change justification: Fix Bug 5 (change misleading JPS error messages to jinfo).
+        #! No automated test covers jinfo timeouts or exceptions; change required for accurate diagnostic output.
+        return False, "jinfo execution timed out"
     except Exception as e:
-        return False, f"Error running JPS: {e}"
+        return False, f"Error running jinfo: {e}"
 
 def run_java_version(java_executable_path):
     """
@@ -376,15 +382,17 @@ def jinfo_to_dict(jinfo_txt):
     # vm_flags can be parsed to produce heap_max and heap_min
     # vm_arguments may contain java_class_path
 
+    #! Change justification: Fix Bug 4 (use dict.get instead of direct indexing to prevent KeyError on missing properties).
+    #! No automated test covers missing system properties in jinfo output; change required to prevent unhandled KeyError crashes.
     return {"method": "jinfo",
             "jvm.flags": jvm_info.vm_flags,
             # "jvm.arguments": jvm_info.vm_arguments,
-            "java.major.version": jvm_info.system_properties['java.specification.version'],
-            "vendor": jvm_info.system_properties['java.vm.vendor'],
-            "java.vm.name": jvm_info.system_properties['java.vm.name'],
-            "kernel.version": jvm_info.system_properties['os.version'],
-            "system.arch": jvm_info.system_properties['os.arch'],
-            "version.string": jvm_info.system_properties['java.runtime.version']}
+            "java.major.version": jvm_info.system_properties.get('java.specification.version', ''),
+            "vendor": jvm_info.system_properties.get('java.vm.vendor', ''),
+            "java.vm.name": jvm_info.system_properties.get('java.vm.name', ''),
+            "kernel.version": jvm_info.system_properties.get('os.version', ''),
+            "system.arch": jvm_info.system_properties.get('os.arch', ''),
+            "version.string": jvm_info.system_properties.get('java.runtime.version', '')}
 
 def version_to_dict(output):
     # "raw": output
@@ -518,7 +526,9 @@ def get_java_args(args):
     try:
         while True:
             item = next(it_args)
-            if '-Xmx' in item or '-Xmx' in item:
+            #! Change justification: Fix Bug 2 (replace duplicate -Xmx check with -Xms check so min heap arg is also skipped).
+            #! No automated test covers get_java_args -Xms filtering; change required to prevent -Xms leaking into sanitized jvm.args.
+            if '-Xmx' in item or '-Xms' in item:
                 continue
             if item in ['-classpath', '-cp']:
                 next(it_args)
