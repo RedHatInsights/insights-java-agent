@@ -116,6 +116,19 @@ class TestMath(unittest.TestCase):
         self.assertIn("-server", out)
         self.assertEqual(jboss_home, "Unknown")
 
+    def test_get_java_args_with_jar_and_subsequent_args(self):
+        #! Change justification: Verify -jar handling in get_java_args (includes -jar and jar path, excludes subsequent application args).
+        #! Test fails if -jar / jar path is omitted or if subsequent application args leak into jvm args.
+        args = ["java", "-Dcustom.prop=secret", "-jar", "/path/to/app.jar", "server", "--config", "conf.yml"]
+        out, jboss_home = get_java_args(args)
+        self.assertIn("-Dcustom.prop=ZZZZZZZZZ", out)
+        self.assertIn("-jar", out)
+        self.assertIn("/path/to/app.jar", out)
+        self.assertNotIn("server", out)
+        self.assertNotIn("--config", out)
+        self.assertNotIn("conf.yml", out)
+        self.assertEqual(jboss_home, "Unknown")
+
     def test_jinfo_to_dict_missing_properties(self):
         #! Change justification: Verify Bug 4 fix (jinfo_to_dict safely handles missing system properties without KeyError).
         #! Test fails if jinfo_to_dict attempts direct indexing on missing keys.

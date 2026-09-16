@@ -520,7 +520,20 @@ def get_java_args(args: List[str]) -> Tuple[str, str]:
     """Retrieve general flags, sanitizing as we go"""
     jboss_home = ""
     out = ""
-    it_args = iter(args[1:-1])
+    #! Change justification: If -jar is present, iterate up to and including the jar file and its path,
+    #! but exclude subsequent application arguments; otherwise slice off the last argument (entrypoint class).
+    #! Test fails if application arguments after -jar are included or if -jar target is incorrectly omitted.
+    if '-jar' in args:
+        try:
+            jar_idx = args.index('-jar')
+            # include up to the jar path (index + 1)
+            target_args = args[1:jar_idx + 2]
+        except ValueError:
+            target_args = args[1:-1]
+    else:
+        target_args = args[1:-1]
+
+    it_args = iter(target_args)
     try:
         while True:
             item = next(it_args)
