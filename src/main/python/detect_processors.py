@@ -22,13 +22,17 @@ def read_file_safely(filepath):
 
 def get_cpus_from_proc_cpuinfo():
     """Get CPU count from /proc/cpuinfo."""
+    #! Change justification: Fix Edge Case 2 (exact whole-word key match for processor field in /proc/cpuinfo).
+    #! Test fails if /proc/cpuinfo contains lines with 'processor' prefix like 'processor version' or non-core attributes.
     try:
         with open('/proc/cpuinfo', 'r') as f:
-            processors = []
+            count = 0
             for line in f:
-                if line.startswith('processor'):
-                    processors.append(line)
-            return len(processors)
+                if ':' in line:
+                    key = line.split(':', 1)[0].strip()
+                    if key == 'processor':
+                        count += 1
+            return count if count > 0 else None
     except (IOError, OSError):
         return None
 
@@ -49,7 +53,10 @@ def get_cgroup_cpu_quota():
     """
     Get CPU quota from cgroup (for containers).
     Returns the effective CPU limit based on cgroup settings.
+    Supports fractional CPU quotas (e.g. 1.5, 0.5).
     """
+    #! Change justification: Allow fractional CPU quota values (float / int) rather than integer division truncation.
+    #! Test fails if fractional quotas like 150000/100000 (1.5) or 50000/100000 (0.5) are truncated.
     # Try cgroup v2 first
     quota_file = '/sys/fs/cgroup/cpu.max'
     content = read_file_safely(quota_file)
@@ -59,7 +66,9 @@ def get_cgroup_cpu_quota():
             try:
                 quota = int(parts[0])
                 period = int(parts[1])
-                return max(1, quota // period)
+                if quota > 0 and period > 0:
+                    val = quota / period
+                    return int(val) if val.is_integer() else val
             except ValueError:
                 pass
     
@@ -75,7 +84,8 @@ def get_cgroup_cpu_quota():
             quota = int(quota_content)
             period = int(period_content)
             if quota > 0 and period > 0:
-                return max(1, quota // period)
+                val = quota / period
+                return int(val) if val.is_integer() else val
         except ValueError:
             pass
     
@@ -117,6 +127,8 @@ def is_containerized():
     """
     Detect if we're running in a container.
     """
+    #! Change justification: Fix Edge Case 3 (comprehensive container detection for Kubernetes, containerd, cgroup v2, etc.).
+    #! Test fails if container environments lacking /.dockerenv or /run/.containerenv (e.g. k8s CRI-O/containerd) are not detected.
     # Check for container-specific files
     container_indicators = [
         '/.dockerenv',
@@ -127,14 +139,28 @@ def is_containerized():
         if os.path.exists(indicator):
             return True
     
-    # Check cgroup for container runtime
+    # Check /proc/1/cgroup (cgroup v1 / early cgroup v2)
     cgroup_content = read_file_safely('/proc/1/cgroup')
     if cgroup_content:
-        container_runtimes = ['docker', 'containerd', 'lxc', 'systemd/docker']
+        container_runtimes = ['docker', 'containerd', 'lxc', 'systemd/docker', 'kubepods', 'libpod']
         for runtime in container_runtimes:
             if runtime in cgroup_content.lower():
                 return True
-    
+
+    # Check /proc/self/cgroup for Kubernetes / containerd slices
+    self_cgroup_content = read_file_safely('/proc/self/cgroup')
+    if self_cgroup_content:
+        container_runtimes = ['docker', 'containerd', 'lxc', 'systemd/docker', 'kubepods', 'libpod']
+        for runtime in container_runtimes:
+            if runtime in self_cgroup_content.lower():
+                return True
+
+    # Check /proc/1/environ for container runtime marker
+    environ_content = read_file_safely('/proc/1/environ')
+    if environ_content:
+        if 'container=' in environ_content or 'KUBERNETES_SERVICE_HOST' in environ_content:
+            return True
+
     return False
 
 
