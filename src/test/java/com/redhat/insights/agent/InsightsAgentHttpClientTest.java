@@ -1,4 +1,4 @@
-/* Copyright (C) Red Hat 2024-2025 */
+/* Copyright (C) Red Hat 2024-2026 */
 package com.redhat.insights.agent;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -40,7 +40,7 @@ public class InsightsAgentHttpClientTest {
                   "Illegal attempt to create SSLContext for token auth");
             });
     HttpPost post = client.createAuthTokenPost();
-    List<Header> headers = Arrays.asList(post.getAllHeaders());
+    List<Header> headers = Arrays.asList(post.getHeaders());
     assertTrue(
         headers.stream()
             .anyMatch(
@@ -52,7 +52,7 @@ public class InsightsAgentHttpClientTest {
     Optional<AgentConfiguration> oConfig = parseArgs("name=foo;token=bar;is_ocp=true");
     InsightsAgentHttpClient client = new InsightsAgentHttpClient(oConfig.get());
     HttpPost post = client.createAuthTokenPost();
-    List<Header> headers = Arrays.asList(post.getAllHeaders());
+    List<Header> headers = Arrays.asList(post.getHeaders());
     assertTrue(
         headers.stream()
             .anyMatch(
