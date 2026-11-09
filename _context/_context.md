@@ -87,13 +87,15 @@ src/main/java/com/redhat/insights/agent/
 | Artifact | Version |
 |---|---|
 | `com.redhat.insights:runtimes-java-api` | `2.0.4` |
-| `org.apache.httpcomponents:httpclient` | `4.5.14` |
-| `org.apache.httpcomponents:httpcore` | `4.4.16` |
-| `org.apache.httpcomponents:httpmime` | `4.5.14` |
+| `org.apache.httpcomponents.client5:httpclient5` | `5.4.4` |
+| `org.apache.httpcomponents.core5:httpcore5` | `5.3.5` |
 | `org.slf4j:slf4j-api` | `2.0.7` |
 | `org.slf4j:slf4j-simple` | `2.0.7` |
 | `org.slf4j:jcl-over-slf4j` | `2.0.7` |
 | `jdk.tools:jdk.tools` | `jdk1.8.0` *(system scope)* |
+
+Multipart support (`org.apache.hc.client5.http.entity.mime`) ships inside `httpclient5`; there is
+no separate `httpmime` artifact as there was in HttpClient 4.x.
 
 ### Test
 
@@ -142,7 +144,9 @@ Shaded jar manifest entries:
 - `Agent-Class: com.redhat.insights.agent.AgentMain`
 - `Multi-Release: true`
 
-Shade relocations include: Apache HttpClient, SLF4J, Jackson, JBoss, WildFly packages.
+Shade relocations include: Apache HttpClient (`org.apache` prefix, which covers the HttpClient 5
+`org.apache.hc.client5` / `org.apache.hc.core5` packages; only `org.apache.catalina.**` is
+excluded), SLF4J, Jackson, JBoss, WildFly packages.
 
 ## Release Process
 
