@@ -50,9 +50,8 @@
 
     <!-- Core dependencies versions -->
     <runtimes.java.api.version>2.0.4</runtimes.java.api.version>
-    <apache.httpclient.version>4.5.14</apache.httpclient.version>
-    <apache.httpcore.version>4.4.16</apache.httpcore.version>
-    <apache.httpmime.version>4.5.14</apache.httpmime.version>
+    <apache.httpclient.version>5.4.4</apache.httpclient.version>
+    <apache.httpcore.version>5.3.5</apache.httpcore.version>
     <org.slf4j.version>2.0.7</org.slf4j.version>
 
     <!-- Test libraries versions -->
@@ -94,19 +93,14 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
         <version>${apache.httpclient.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
         <version>${apache.httpcore.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpmime</artifactId>
-        <version>${apache.httpmime.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -185,16 +179,12 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
+      <groupId>org.apache.httpcomponents.core5</groupId>
+      <artifactId>httpcore5</artifactId>
     </dependency>
 
     <dependency>
