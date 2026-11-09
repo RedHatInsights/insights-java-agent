@@ -99,7 +99,7 @@ public final class InsightsAgentHttpClient implements InsightsHttpClient {
     }
     clientBuilder.setRetryStrategy(
         new DefaultHttpRequestRetryStrategy(
-            configuration.getHttpClientRetryMaxAttempts(), TimeValue.ofSeconds(1)));
+            configuration.getHttpClientRetryMaxAttempts(), TimeValue.ZERO_MILLISECONDS));
     SSLConnectionSocketFactory sslSocketFactory;
     if (useMTLS) {
       SSLContext sslContext = sslContextSupplier.get();
