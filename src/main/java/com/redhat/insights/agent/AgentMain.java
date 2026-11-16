@@ -31,6 +31,16 @@ public final class AgentMain {
 
   public static void premain(String agentArgs, Instrumentation instrumentation) {
     startAgent(agentArgs, instrumentation);
+
+    // There seems to be some kind of race condition between premain() and java main class main()
+    //   which results in JVM intermittently exiting with status 1 after return from premain() and
+    //   before invoking main class main()
+    // Observed on macOS with OpenJDK 17 using -shaded.jar
+    // The next lines make the problem go away
+    try {
+      Thread.sleep(1);
+    } catch (InterruptedException e) {
+    }
   }
 
   public static void agentmain(String agentArgs, Instrumentation instrumentation) {
