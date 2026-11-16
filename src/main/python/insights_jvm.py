@@ -7,35 +7,245 @@ that we have read access to. The disadvantages of this route include
 needing to parse the hsperfdata format.
 """
 
+import glob
+import hashlib
+import json
 import os
 import re
 import subprocess
-import glob
-import hashlib
+import sys
 from collections import namedtuple
-from datetime import datetime
-from typing import Dict, List
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Named tuples for structured data
-ProcessInfo = namedtuple('ProcessInfo', ['pid', 'name', 'launch_time', 'cmdline', 'exe', 'processors', 'rhel_version'])
+ProcessInfo = namedtuple(
+    'ProcessInfo',
+    ['pid', 'name', 'launch_time', 'cmdline', 'exe', 'processors', 'rhel_version'],
+)
+
+
+#! Change justification: Integrated processor detection from detect_processors into insights_jvm.py.
+#! Supports cgroups v1/v2, cpuset, /proc/cpuinfo, and container-aware CPU detection.
+
+
+def read_file_safely(filepath: str) -> Optional[str]:
+    """Safely read a file and return its content, or None if it fails."""
+    try:
+        with open(filepath, 'r') as f:
+            return f.read().strip()
+    except (IOError, OSError):
+        return None
+
+
+def get_cpus_from_proc_cpuinfo() -> Optional[int]:
+    """Get CPU count from /proc/cpuinfo."""
+    #! Change justification: Fix Edge Case 2 (exact whole-word key match for processor field in /proc/cpuinfo).
+    #! Test fails if /proc/cpuinfo contains lines with 'processor' prefix like 'processor version' or non-core attributes.
+    try:
+        with open('/proc/cpuinfo', 'r') as f:
+            count = 0
+            for line in f:
+                if ':' in line:
+                    key = line.split(':', 1)[0].strip()
+                    if key == 'processor':
+                        count += 1
+            return count if count > 0 else None
+    except (IOError, OSError):
+        return None
+
+
+def get_cpus_from_sys_devices() -> Optional[int]:
+    """Get CPU count from /sys/devices/system/cpu/."""
+    try:
+        cpu_dirs = []
+        for item in os.listdir('/sys/devices/system/cpu/'):
+            if item.startswith('cpu') and item[3:].isdigit():
+                cpu_dirs.append(item)
+        return len(cpu_dirs)
+    except (IOError, OSError):
+        return None
+
+
+def get_cgroup_cpu_quota() -> Optional[Union[int, float]]:
+    """
+    Get CPU quota from cgroup (for containers).
+    Returns the effective CPU limit based on cgroup settings.
+    Supports fractional CPU quotas (e.g. 1.5, 0.5).
+    """
+    #! Change justification: Allow fractional CPU quota values (float / int) rather than integer division truncation.
+    #! Test fails if fractional quotas like 150000/100000 (1.5) or 50000/100000 (0.5) are truncated.
+    # Try cgroup v2 first
+    quota_file = '/sys/fs/cgroup/cpu.max'
+    content = read_file_safely(quota_file)
+    if content:
+        parts = content.split()
+        if len(parts) >= 2 and parts[0] != 'max':
+            try:
+                quota = int(parts[0])
+                period = int(parts[1])
+                if quota > 0 and period > 0:
+                    val = quota / period
+                    return int(val) if val.is_integer() else val
+            except ValueError:
+                pass
+
+    # Try cgroup v1
+    quota_file = '/sys/fs/cgroup/cpu/cpu.cfs_quota_us'
+    period_file = '/sys/fs/cgroup/cpu/cpu.cfs_period_us'
+
+    quota_content = read_file_safely(quota_file)
+    period_content = read_file_safely(period_file)
+
+    if quota_content and period_content:
+        try:
+            quota = int(quota_content)
+            period = int(period_content)
+            if quota > 0 and period > 0:
+                val = quota / period
+                return int(val) if val.is_integer() else val
+        except ValueError:
+            pass
+
+    return None
+
+
+def get_cgroup_cpuset() -> Optional[int]:
+    """
+    Get CPU set from cgroup (for containers).
+    Returns the number of CPUs in the cpuset.
+    """
+    # Try cgroup v2 first
+    cpuset_file = '/sys/fs/cgroup/cpuset.cpus.effective'
+    content = read_file_safely(cpuset_file)
+    if not content:
+        # Try cgroup v1
+        cpuset_file = '/sys/fs/cgroup/cpuset/cpuset.cpus'
+        content = read_file_safely(cpuset_file)
+
+    if content:
+        try:
+            # Parse CPU set format like "0-3" or "0,2,4-7"
+            cpu_count = 0
+            for part in content.split(','):
+                part = part.strip()
+                if '-' in part:
+                    start, end = map(int, part.split('-'))
+                    cpu_count += end - start + 1
+                else:
+                    cpu_count += 1
+            return cpu_count
+        except ValueError:
+            pass
+
+    return None
+
+
+def is_containerized() -> bool:
+    """
+    Detect if we're running in a container.
+    """
+    #! Change justification: Fix Edge Case 3 (comprehensive container detection for Kubernetes, containerd, cgroup v2, etc.).
+    #! Test fails if container environments lacking /.dockerenv or /run/.containerenv (e.g. k8s CRI-O/containerd) are not detected.
+    # Check for container-specific files
+    container_indicators = [
+        '/.dockerenv',
+        '/run/.containerenv',  # Podman
+    ]
+
+    for indicator in container_indicators:
+        if os.path.exists(indicator):
+            return True
+
+    # Check /proc/1/cgroup (cgroup v1 / early cgroup v2)
+    cgroup_content = read_file_safely('/proc/1/cgroup')
+    if cgroup_content:
+        container_runtimes = ['docker', 'containerd', 'lxc', 'systemd/docker', 'kubepods', 'libpod']
+        for runtime in container_runtimes:
+            if runtime in cgroup_content.lower():
+                return True
+
+    # Check /proc/self/cgroup for Kubernetes / containerd slices
+    self_cgroup_content = read_file_safely('/proc/self/cgroup')
+    if self_cgroup_content:
+        container_runtimes = ['docker', 'containerd', 'lxc', 'systemd/docker', 'kubepods', 'libpod']
+        for runtime in container_runtimes:
+            if runtime in self_cgroup_content.lower():
+                return True
+
+    # Check /proc/1/environ for container runtime marker
+    environ_content = read_file_safely('/proc/1/environ')
+    if environ_content:
+        if 'container=' in environ_content or 'KUBERNETES_SERVICE_HOST' in environ_content:
+            return True
+
+    return False
+
+
+def detect_processors() -> Tuple[Union[int, float], str, bool]:
+    """
+    Main function to detect the number of processors.
+    Returns a tuple: (cpu_count, method_used, is_container)
+    """
+    container = is_containerized()
+
+    # Method 1: Try os.cpu_count() (most reliable for bare metal)
+    os_cpu_count = os.cpu_count()
+
+    # Method 2: Try cgroup limits (important for containers)
+    cgroup_quota = get_cgroup_cpu_quota()
+    cgroup_cpuset = get_cgroup_cpuset()
+
+    # Method 3: Try /proc/cpuinfo
+    proc_cpuinfo_count = get_cpus_from_proc_cpuinfo()
+
+    # Method 4: Try /sys/devices/system/cpu/
+    sys_devices_count = get_cpus_from_sys_devices()
+
+    # Decision logic
+    if container:
+        # In container, prefer cgroup limits over system CPU count
+        if cgroup_quota is not None:
+            return cgroup_quota, 'cgroup CPU quota', True
+        elif cgroup_cpuset is not None:
+            return cgroup_cpuset, 'cgroup CPU set', True
+        elif os_cpu_count is not None:
+            return os_cpu_count, 'os.cpu_count() (container)', True
+    else:
+        # On bare metal, prefer os.cpu_count()
+        if os_cpu_count is not None:
+            return os_cpu_count, 'os.cpu_count()', False
+
+    # Fallback methods
+    if proc_cpuinfo_count is not None:
+        return proc_cpuinfo_count, '/proc/cpuinfo', container
+    elif sys_devices_count is not None:
+        return sys_devices_count, '/sys/devices/system/cpu/', container
+    else:
+        return 1, 'fallback (could not detect)', container
+
 
 class ProcUtil:
-    """Simple class to replace psutil functionality """
-    def __init__(self):
-        self.rhel_version = self._read_file('/etc/redhat-release')
-        self.processors = os.cpu_count()
+    """Simple class to replace psutil functionality"""
 
-    def _read_file(self, filepath):
+    def __init__(self) -> None:
+        self.rhel_version: Optional[str] = self._read_file('/etc/redhat-release')
+        #! Change justification: Use detect_processors() to detect container/cgroup aware CPU count.
+        #! Test fails if container CPU limits are ignored.
+        cpu_count, _, _ = detect_processors()
+        self.processors: Optional[Union[int, float]] = cpu_count
+
+    def _read_file(self, filepath: str) -> Optional[str]:
         try:
             with open(filepath, 'r') as f:
                 return f.read().strip()
         except (IOError, OSError):
             return None
 
-    def get_pids(self):
+    def get_pids(self) -> List[int]:
         """Get list of all process IDs"""
-        _pids = []
+        _pids: List[int] = []
         for pid_dir in glob.glob('/proc/[0-9]*'):
             try:
                 pid = int(os.path.basename(pid_dir))
@@ -44,11 +254,11 @@ class ProcUtil:
                 continue
         return sorted(_pids)
 
-    def pid_exists(self, p_id):
+    def pid_exists(self, p_id: int) -> bool:
         """Check if a process ID exists"""
         return os.path.isdir(f'/proc/{p_id}')
 
-    def get_process_info(self, p_id):
+    def get_process_info(self, p_id: int) -> Optional[ProcessInfo]:
         """Get detailed information about a process"""
         if not self.pid_exists(p_id):
             return None
@@ -58,30 +268,57 @@ class ProcUtil:
         if not stat_content:
             return None
 
-        stat_fields = stat_content.split()
-        if len(stat_fields) < 24:
+        #! Change justification: Robust /proc/pid/stat parsing (Performance & Robustness issue 2).
+        #! Test fails when process comm name contains spaces or parentheses (e.g. `(java worker (1))`).
+        # The comm field is enclosed in parentheses and may contain spaces/parens.
+        # Everything after the last ')' contains the remaining fields starting from field 3 (state).
+        rparen_idx = stat_content.rfind(')')
+        lparen_idx = stat_content.find('(')
+        if rparen_idx == -1 or lparen_idx == -1 or lparen_idx >= rparen_idx:
             return None
 
-        # Extract relevant fields
-        # Field 22 is starttime (in clock ticks since boot)
-        name = stat_fields[1].strip('()')
-        launch_time = self.get_process_launch_time(stat_fields)
+        name = stat_content[lparen_idx + 1 : rparen_idx]
+        rest_fields = stat_content[rparen_idx + 1 :].split()
+        # Field 22 (starttime) in 1-based index corresponds to index 19 in rest_fields (22 - 3 = 19)
+        if len(rest_fields) < 20:
+            return None
+
+        launch_time = self.get_process_launch_time(rest_fields[19])
 
         cmdline = self.get_process_cmdline(p_id)
         exe = self.get_process_exe(p_id)
 
-        return ProcessInfo(p_id, name, launch_time, cmdline, exe, self.processors, self.rhel_version)
+        return ProcessInfo(
+            p_id,
+            name,
+            launch_time,
+            cmdline,
+            exe,
+            self.processors,
+            self.rhel_version,
+        )
 
-    def get_process_launch_time(self, stat_fields):
+    def get_process_launch_time(
+        self, starttime_ticks_val: Union[int, str, List[Any], Tuple[Any, ...]]
+    ) -> Optional[str]:
         try:
-            starttime_ticks = int(stat_fields[21])
+            #! Change justification: Handle starttime ticks passed directly or as stat_fields list/tuple.
+            #! Supports both field value directly and legacy list/tuple parameter.
+            if isinstance(starttime_ticks_val, (list, tuple)):
+                starttime_ticks = int(starttime_ticks_val[21])
+            else:
+                starttime_ticks = int(starttime_ticks_val)
 
             # Get system boot time
+            boot_time: Optional[int] = None
             with open('/proc/stat', 'r') as f:
                 for line in f:
                     if line.startswith('btime'):
                         boot_time = int(line.split()[1])
                         break
+
+            if boot_time is None:
+                return None
 
             # Get clock ticks per second
             clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
@@ -90,10 +327,10 @@ class ProcUtil:
             start_time = boot_time + (starttime_ticks / clock_ticks)
             return str(datetime.fromtimestamp(start_time))
 
-        except (FileNotFoundError, IndexError, ValueError):
+        except (FileNotFoundError, IndexError, ValueError, KeyError, OSError):
             return None
 
-    def get_process_cmdline(self, pid):
+    def get_process_cmdline(self, pid: int) -> List[str]:
         """Get process command line arguments"""
         cmdline_content = self._read_file(f'/proc/{pid}/cmdline')
         if not cmdline_content:
@@ -104,16 +341,16 @@ class ProcUtil:
         args = [arg for arg in cmdline_content.split('\x00') if arg]
         return args
 
-    def get_process_exe(self, pid):
+    def get_process_exe(self, pid: int) -> Optional[str]:
         """Get process executable path"""
         try:
             return os.readlink(f'/proc/{pid}/exe')
         except (OSError, IOError):
             return None
 
-    def get_processes(self):
+    def get_processes(self) -> List[ProcessInfo]:
         """Get information about all processes"""
-        _processes = []
+        _processes: List[ProcessInfo] = []
         for pid in self.get_pids():
             proc_info = self.get_process_info(pid)
             if proc_info:
@@ -236,63 +473,15 @@ def convert_namedtuples(obj):
         return [convert_namedtuples(item) for item in obj]
     return obj
 
-def _escape_json_string(s) -> str:
-    """Escape special characters in JSON strings."""
-    if not isinstance(s, str):
-        return str(s)
-    
-    # Replace backslashes first to avoid double escaping
-    s = s.replace('\\', '\\\\')
-    s = s.replace('"', '\\"')
-    s = s.replace('\n', '\\n')
-    s = s.replace('\r', '\\r')
-    s = s.replace('\t', '\\t')
-    s = s.replace('\b', '\\b')
-    s = s.replace('\f', '\\f')
-    return s
-
-def _serialize_json(obj, indent=0, sort_keys=True) -> str:
-    """Custom JSON serializer without using json module."""
-    indent_str = '  ' * indent
-    next_indent_str = '  ' * (indent + 1)
-    
-    if obj is None:
-        return 'null'
-    elif isinstance(obj, bool):
-        return 'true' if obj else 'false'
-    elif isinstance(obj, (int, float)):
-        return str(obj)
-    elif isinstance(obj, str):
-        return f'"{_escape_json_string(obj)}"'
-    elif isinstance(obj, (list, tuple)):
-        if not obj:
-            return '[]'
-        items = []
-        for item in obj:
-            serialized_item = _serialize_json(item, indent + 1, sort_keys)
-            items.append(f'{next_indent_str}{serialized_item}')
-        return '[\n' + ',\n'.join(items) + f'\n{indent_str}]'
-    elif isinstance(obj, dict):
-        if not obj:
-            return '{}'
-        items = []
-        keys = sorted(obj.keys()) if sort_keys else obj.keys()
-        for key in keys:
-            serialized_key = _escape_json_string(str(key))
-            serialized_value = _serialize_json(obj[key], indent + 1, sort_keys)
-            items.append(f'{next_indent_str}"{serialized_key}": {serialized_value}')
-        return '{\n' + ',\n'.join(items) + f'\n{indent_str}' + '}'
-    else:
-        # Fallback for other types
-        return f'"{_escape_json_string(str(obj))}"'
-
+#! Change justification: Use standard library json for serialization (Performance & Robustness issue 1).
+#! Test fails if pretty_json fails to output standard RFC compliant JSON or crashes on nested structures.
 def pretty_json(nt) -> str:
     converted = convert_namedtuples(nt)
-    return _serialize_json(converted, indent=0, sort_keys=True)
+    return json.dumps(converted, indent=2, sort_keys=True)
 
 # Misc helper methods
 
-def find_jinfo_binary(java_executable_path: str) -> str:
+def find_jinfo_binary(java_executable_path: str) -> Optional[str]:
     """
     Find the jinfo binary in the same directory as the Java executable.
 
@@ -300,17 +489,20 @@ def find_jinfo_binary(java_executable_path: str) -> str:
         java_executable_path (str): Path to the Java executable
 
     Returns:
-        str: Path to jinfo binary or None if not found
+        Optional[str]: Path to jinfo binary or None if not found
     """
     java_dir = os.path.dirname(java_executable_path)
-    jps_path = os.path.join(java_dir, 'jinfo')
+    #! Change justification: Fix Bug 5 (incorrect variable name jps_path -> jinfo_path).
+    #! No automated test covers binary resolution; change required for code clarity and correctness.
+    jinfo_path = os.path.join(java_dir, 'jinfo')
 
-    if os.path.exists(jps_path) and os.access(jps_path, os.X_OK):
-        return jps_path
+    if os.path.exists(jinfo_path) and os.access(jinfo_path, os.X_OK):
+        return jinfo_path
 
     return None
 
-def run_jinfo(jinfo_path, pid):
+
+def run_jinfo(jinfo_path: str, pid: int) -> Tuple[bool, str]:
     """
     Execute jinfo command to get Java process information.
 
@@ -319,26 +511,33 @@ def run_jinfo(jinfo_path, pid):
         pid (int): Process ID
 
     Returns:
-        tuple: (success, output)
+        Tuple[bool, str]: (success, output)
     """
     try:
         # Run jinfo with verbose flag to get more information
-        result = subprocess.run([jinfo_path, str(pid)],
-                              capture_output=True,
-                              text=True,
-                              timeout=10)
+        result = subprocess.run(
+            [jinfo_path, str(pid)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
         if result.returncode == 0:
             return True, result.stdout
 
-        return False, "{result.stderr}"
+        #! Change justification: Fix Bug 1 (return actual stderr instead of literal string "{result.stderr}").
+        #! No automated test covers subprocess execution failure; change required to report actual error output.
+        return False, f"{result.stderr}"
 
     except subprocess.TimeoutExpired:
-        return False, "JPS execution timed out"
+        #! Change justification: Fix Bug 5 (change misleading JPS error messages to jinfo).
+        #! No automated test covers jinfo timeouts or exceptions; change required for accurate diagnostic output.
+        return False, "jinfo execution timed out"
     except Exception as e:
-        return False, f"Error running JPS: {e}"
+        return False, f"Error running jinfo: {e}"
 
-def run_java_version(java_executable_path):
+
+def run_java_version(java_executable_path: str) -> Tuple[bool, str]:
     """
     Execute java -version command to get basic Java information.
 
@@ -346,13 +545,15 @@ def run_java_version(java_executable_path):
         java_executable_path (str): Path to java executable
 
     Returns:
-        tuple: (success, output)
+        Tuple[bool, str]: (success, output)
     """
     try:
-        result = subprocess.run([java_executable_path, '-version'],
-                              capture_output=True,
-                              text=True,
-                              timeout=10)
+        result = subprocess.run(
+            [java_executable_path, '-version'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
         # java -version outputs to stderr by default
         output = result.stderr if result.stderr else result.stdout
@@ -368,7 +569,7 @@ def run_java_version(java_executable_path):
         return False, f"Error running java -version: {e}"
 
 
-def jinfo_to_dict(jinfo_txt):
+def jinfo_to_dict(jinfo_txt: str) -> Dict[str, Any]:
     """Processes output from jinfo into a dict"""
     parser = JInfoParser()
     jvm_info = parser.parse_output(jinfo_txt)
@@ -376,19 +577,24 @@ def jinfo_to_dict(jinfo_txt):
     # vm_flags can be parsed to produce heap_max and heap_min
     # vm_arguments may contain java_class_path
 
-    return {"method": "jinfo",
-            "jvm.flags": jvm_info.vm_flags,
-            # "jvm.arguments": jvm_info.vm_arguments,
-            "java.major.version": jvm_info.system_properties['java.specification.version'],
-            "vendor": jvm_info.system_properties['java.vm.vendor'],
-            "java.vm.name": jvm_info.system_properties['java.vm.name'],
-            "kernel.version": jvm_info.system_properties['os.version'],
-            "system.arch": jvm_info.system_properties['os.arch'],
-            "version.string": jvm_info.system_properties['java.runtime.version']}
+    #! Change justification: Fix Bug 4 (use dict.get instead of direct indexing to prevent KeyError on missing properties).
+    #! No automated test covers missing system properties in jinfo output; change required to prevent unhandled KeyError crashes.
+    return {
+        "method": "jinfo",
+        "jvm.flags": jvm_info.vm_flags,
+        # "jvm.arguments": jvm_info.vm_arguments,
+        "java.major.version": jvm_info.system_properties.get('java.specification.version', ''),
+        "vendor": jvm_info.system_properties.get('java.vm.vendor', ''),
+        "java.vm.name": jvm_info.system_properties.get('java.vm.name', ''),
+        "kernel.version": jvm_info.system_properties.get('os.version', ''),
+        "system.arch": jvm_info.system_properties.get('os.arch', ''),
+        "version.string": jvm_info.system_properties.get('java.runtime.version', ''),
+    }
 
-def version_to_dict(output):
+
+def version_to_dict(output: str) -> Dict[str, Any]:
     # "raw": output
-    info = {"method": "version"}
+    info: Dict[str, Any] = {"method": "version"}
 
     if not output:
         return info
@@ -484,7 +690,8 @@ def version_to_dict(output):
 
     return info
 
-def get_extra_info(exe, pid):
+
+def get_extra_info(exe: str, pid: int) -> Dict[str, Any]:
     jinfo_path = find_jinfo_binary(exe)
 
     if jinfo_path:
@@ -498,7 +705,8 @@ def get_extra_info(exe, pid):
         return version_to_dict(output)
     return {}
 
-def get_classpath(cmdline):
+
+def get_classpath(cmdline: List[str]) -> str:
     """Retrieve classpath from list of Java args"""
     it_args = iter(cmdline)
     try:
@@ -510,20 +718,36 @@ def get_classpath(cmdline):
         pass
     return ""
 
-def get_java_args(args):
+
+def get_java_args(args: List[str]) -> Tuple[str, str]:
     """Retrieve general flags, sanitizing as we go"""
     jboss_home = ""
     out = ""
-    it_args = iter(args[1:-1])
+    #! Change justification: If -jar is present, iterate up to and including the jar file and its path,
+    #! but exclude subsequent application arguments; otherwise slice off the last argument (entrypoint class).
+    #! Test fails if application arguments after -jar are included or if -jar target is incorrectly omitted.
+    if '-jar' in args:
+        try:
+            jar_idx = args.index('-jar')
+            # include up to the jar path (index + 1)
+            target_args = args[1:jar_idx + 2]
+        except ValueError:
+            target_args = args[1:-1]
+    else:
+        target_args = args[1:-1]
+
+    it_args = iter(target_args)
     try:
         while True:
             item = next(it_args)
-            if '-Xmx' in item or '-Xmx' in item:
+            #! Change justification: Fix Bug 2 (replace duplicate -Xmx check with -Xms check so min heap arg is also skipped).
+            #! No automated test covers get_java_args -Xms filtering; change required to prevent -Xms leaking into sanitized jvm.args.
+            if '-Xmx' in item or '-Xms' in item:
                 continue
             if item in ['-classpath', '-cp']:
                 next(it_args)
             elif item.startswith('-D'):
-                if not '=' in item:
+                if '=' not in item:
                     continue
                 (d_key, value, *foo) = item.split('=')
                 if d_key.startswith('-Djboss.home.dir'):
@@ -531,7 +755,7 @@ def get_java_args(args):
                 else:
                     out += f' {d_key}=ZZZZZZZZZ'
             else:
-                out += ' '+ item
+                out += ' ' + item
     except StopIteration:
         pass
 
@@ -544,7 +768,8 @@ def get_java_args(args):
         return out, jboss_version
     return out, "Unknown"
 
-def get_java_memory(cmdline):
+
+def get_java_memory(cmdline: List[str]) -> Tuple[Optional[str], Optional[str]]:
     """Retrieve Java memory flags"""
     min_mem = None
     max_mem = None
@@ -561,42 +786,69 @@ def get_java_memory(cmdline):
         pass
     return (min_mem, max_mem)
 
-def make_report(nt):
+
+def make_report(nt: ProcessInfo) -> Dict[str, Any]:
     """Convert Named Tuple to Report Dictionary"""
-    d = {'java.class.path': get_classpath(nt.cmdline), 'name': nt.exe,
-            'launch.time': nt.launch_time, 'rhel.version': nt.rhel_version,
-         'processors': nt.processors }
+    d: Dict[str, Any] = {
+        'java.class.path': get_classpath(nt.cmdline),
+        'name': nt.exe,
+        'launch.time': nt.launch_time,
+        'rhel.version': nt.rhel_version,
+        'processors': nt.processors,
+    }
     (d['jvm.heap.min'], d['jvm.heap.max']) = get_java_memory(nt.cmdline)
     (d['jvm.args'], d['jboss.version']) = get_java_args(nt.cmdline)
     d.update(get_extra_info(nt.exe, nt.pid))
     return d
 
-# Main script
-if __name__ == '__main__':
-    proc = ProcUtil()
 
+def scan_and_write_reports(
+    output_dir: str = "/var/tmp/insights-runtimes/uploads",
+) -> Tuple[int, int]:
+    """
+    Scan system for Java processes and write JSON reports.
+
+    Returns:
+        Tuple[int, int]: (count of successfully written reports, count of write errors)
+    """
+    #! Change justification: Refactor main loop into testable function with proper error tracking and stderr logging.
+    #! Test fails if file write failures are unhandled or fail silently.
+    proc = ProcUtil()
     hostname = os.uname()[1]
     processes = proc.get_processes()
+    written_count = 0
+    error_count = 0
+
     for p in processes:
         if p.exe is None:
             continue
         # Check if 'java' is in the process name or exec'd binary
         if 'java' in p.name.lower() or 'java' in p.exe.lower():
-            report = {"version" : "1.0.2", "psdata": make_report(p)}
+            report = {"version": "1.0.2", "psdata": make_report(p)}
             report['psdata']['system.hostname'] = hostname
             # Compute SHA256 hash of the report contents
             json_output = pretty_json(report)
             content_hash = hashlib.sha256(json_output.encode('utf-8')).hexdigest()
-            
+
             # Write report to file using SHA256 hash as filename
-            output_dir = "/var/tmp/insights-runtimes/uploads"
             try:
                 os.makedirs(output_dir, exist_ok=True)
                 filename = f"{content_hash}_connect.json"
                 filepath = os.path.join(output_dir, filename)
-                
+
                 with open(filepath, 'w') as f:
                     f.write(json_output)
-                
+                written_count += 1
+
             except (OSError, IOError) as e:
-                print(f"Error writing report to file: {e}")
+                print(f"Error writing report to file {output_dir}: {e}", file=sys.stderr)
+                error_count += 1
+
+    return written_count, error_count
+
+
+# Main script
+if __name__ == '__main__':
+    _, errors = scan_and_write_reports()
+    if errors > 0:
+        sys.exit(1)
